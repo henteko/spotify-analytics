@@ -122,19 +122,37 @@ export class SpotifyAnalytics {
 
     const streamData: StreamData[] = [];
 
-    for (const episodeStream of response.streams) {
-      for (let i = 0; i < response.dates.length; i++) {
+    // Handle podcast-level format (detailedStreams)
+    if (response.detailedStreams && Array.isArray(response.detailedStreams)) {
+      for (const stream of response.detailedStreams) {
         streamData.push({
-          date: response.dates[i],
-          episodeId: episodeStream.episodeId,
-          episodeName: episodeStream.episodeName,
-          streams: episodeStream.streams[i] || 0,
-          starts: episodeStream.starts[i] || 0,
+          date: stream.date,
+          episodeId: stream.episodeId || '',
+          episodeName: stream.episodeName || '',
+          starts: stream.starts,
+          streams: stream.streams,
         });
       }
+      return streamData;
     }
 
-    return streamData;
+    // Handle episode-level format (dates + streams arrays)
+    if (response.streams && Array.isArray(response.streams) && response.dates) {
+      for (const episodeStream of response.streams) {
+        for (let i = 0; i < response.dates.length; i++) {
+          streamData.push({
+            date: response.dates[i],
+            episodeId: episodeStream.episodeId,
+            episodeName: episodeStream.episodeName,
+            streams: episodeStream.streams[i] || 0,
+            starts: episodeStream.starts[i] || 0,
+          });
+        }
+      }
+      return streamData;
+    }
+
+    throw new Error(`Invalid streams response format: ${JSON.stringify(response)}`);
   }
 
   /**

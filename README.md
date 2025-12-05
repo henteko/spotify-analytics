@@ -72,7 +72,27 @@ console.log(streams);
 3. Application/Storage → Cookies → https://creators.spotify.com
 4. `sp_dc` と `sp_key` の値をコピー
 
+## 前提条件
+
+このツールを使用するには、以下が必要です：
+
+1. **Spotify for Podcastersアカウント**
+   - https://creators.spotify.com でアカウントを作成
+   - ポッドキャストを登録・管理している必要があります
+
+2. **認証情報（Cookie）**
+   - `sp_dc`と`sp_key`をブラウザから取得
+
+> **注意**: ポッドキャストが登録されていないアカウントでは、データを取得できません。
+
 ## CLIコマンド一覧
+
+### `me`
+現在のユーザー情報を表示します（認証確認用）。
+
+```bash
+npm run dev -- me
+```
 
 ### `init`
 設定ファイルを作成します。

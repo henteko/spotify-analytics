@@ -4,7 +4,7 @@
 
 import { Command } from 'commander';
 import { SpotifyAnalytics } from '../lib';
-import { loadConfig, getCredentials } from './utils/config';
+import { loadEnv, getCredentials } from './utils/config';
 import { Logger } from './utils/logger';
 import { initCommand } from './commands/init';
 
@@ -29,56 +29,6 @@ program
     await initCommand();
   });
 
-// List command
-program
-  .command('list')
-  .description('List available podcasts')
-  .option('-f, --format <format>', 'Output format (table/csv/json)', 'table')
-  .option('-o, --output <file>', 'Output file path')
-  .action(async (options) => {
-    const logger = new Logger(program.opts().verbose, program.opts().quiet);
-
-    try {
-      const config = await loadConfig(program.opts().config);
-      const credentials = getCredentials(config);
-
-      if (!credentials) {
-        logger.error('No credentials found. Run "spotify-analytics init" first.');
-        process.exit(2);
-      }
-
-      const analytics = new SpotifyAnalytics({ credentials });
-      const podcasts = await analytics.getCatalog();
-
-      if (options.format === 'table') {
-        logger.table(podcasts.map(p => ({
-          ID: p.id,
-          Name: p.name,
-          Publisher: p.publisher,
-        })));
-      } else if (options.format === 'csv') {
-        if (options.output) {
-          await analytics.exportToCSV(podcasts, options.output);
-          logger.success(`Exported to ${options.output}`);
-        } else {
-          const { CSVExporter } = await import('../exporters');
-          const exporter = new CSVExporter();
-          console.log(exporter.stringify(podcasts));
-        }
-      } else if (options.format === 'json') {
-        if (options.output) {
-          await analytics.exportToJSON(podcasts, options.output);
-          logger.success(`Exported to ${options.output}`);
-        } else {
-          console.log(JSON.stringify(podcasts, null, 2));
-        }
-      }
-    } catch (error) {
-      logger.error(`Failed to list podcasts: ${(error as Error).message}`);
-      process.exit(1);
-    }
-  });
-
 // Streams command
 program
   .command('streams')
@@ -87,17 +37,16 @@ program
   .requiredOption('--start <date>', 'Start date (YYYY-MM-DD)')
   .option('--end <date>', 'End date (YYYY-MM-DD)')
   .option('--episode-id <id>', 'Specific episode ID')
-  .option('-o, --output <file>', 'Output file path')
   .option('-f, --format <format>', 'Output format (csv/json)', 'csv')
   .action(async (options) => {
     const logger = new Logger(program.opts().verbose, program.opts().quiet);
 
     try {
-      const config = await loadConfig(program.opts().config);
-      const credentials = getCredentials(config);
+      await loadEnv(program.opts().config);
+      const credentials = getCredentials();
 
       if (!credentials) {
-        logger.error('No credentials found. Run "spotify-analytics init" first.');
+        logger.error('No credentials found. Run "spotify-analytics init" first or set SPOTIFY_SP_DC and SPOTIFY_SP_KEY environment variables.');
         process.exit(2);
       }
 
@@ -112,15 +61,13 @@ program
         end,
       });
 
-      const outputPath = options.output || `streams_${options.start}.${options.format}`;
-
       if (options.format === 'csv') {
-        await analytics.exportToCSV(streams, outputPath);
+        const { CSVExporter } = await import('../exporters');
+        const exporter = new CSVExporter();
+        console.log(exporter.stringify(streams));
       } else {
-        await analytics.exportToJSON(streams, outputPath);
+        console.log(JSON.stringify(streams, null, 2));
       }
-
-      logger.success(`Exported ${streams.length} records to ${outputPath}`);
     } catch (error) {
       logger.error(`Failed to get streams: ${(error as Error).message}`);
       process.exit(1);
@@ -135,17 +82,16 @@ program
   .option('--start <date>', 'Start date (YYYY-MM-DD)')
   .option('--end <date>', 'End date (YYYY-MM-DD)')
   .option('--limit <number>', 'Maximum number of episodes', parseInt)
-  .option('-o, --output <file>', 'Output file path')
   .option('-f, --format <format>', 'Output format (csv/json)', 'csv')
   .action(async (options) => {
     const logger = new Logger(program.opts().verbose, program.opts().quiet);
 
     try {
-      const config = await loadConfig(program.opts().config);
-      const credentials = getCredentials(config);
+      await loadEnv(program.opts().config);
+      const credentials = getCredentials();
 
       if (!credentials) {
-        logger.error('No credentials found. Run "spotify-analytics init" first.');
+        logger.error('No credentials found. Run "spotify-analytics init" first or set SPOTIFY_SP_DC and SPOTIFY_SP_KEY environment variables.');
         process.exit(2);
       }
 
@@ -158,15 +104,13 @@ program
         limit: options.limit,
       });
 
-      const outputPath = options.output || `episodes.${options.format}`;
-
       if (options.format === 'csv') {
-        await analytics.exportToCSV(episodes, outputPath);
+        const { CSVExporter } = await import('../exporters');
+        const exporter = new CSVExporter();
+        console.log(exporter.stringify(episodes));
       } else {
-        await analytics.exportToJSON(episodes, outputPath);
+        console.log(JSON.stringify(episodes, null, 2));
       }
-
-      logger.success(`Exported ${episodes.length} episodes to ${outputPath}`);
     } catch (error) {
       logger.error(`Failed to get episodes: ${(error as Error).message}`);
       process.exit(1);
@@ -186,11 +130,11 @@ program
     const logger = new Logger(program.opts().verbose, program.opts().quiet);
 
     try {
-      const config = await loadConfig(program.opts().config);
-      const credentials = getCredentials(config);
+      await loadEnv(program.opts().config);
+      const credentials = getCredentials();
 
       if (!credentials) {
-        logger.error('No credentials found. Run "spotify-analytics init" first.');
+        logger.error('No credentials found. Run "spotify-analytics init" first or set SPOTIFY_SP_DC and SPOTIFY_SP_KEY environment variables.');
         process.exit(2);
       }
 
@@ -216,6 +160,37 @@ program
       result.files.forEach(file => logger.info(`  - ${file}`));
     } catch (error) {
       logger.error(`Failed to export data: ${(error as Error).message}`);
+      if (program.opts().verbose) {
+        console.error(error);
+      }
+      process.exit(1);
+    }
+  });
+
+// Me command (get user info)
+program
+  .command('me')
+  .description('Get current user information')
+  .action(async () => {
+    const logger = new Logger(program.opts().verbose, program.opts().quiet);
+
+    try {
+      await loadEnv(program.opts().config);
+      const credentials = getCredentials();
+
+      if (!credentials) {
+        logger.error('No credentials found. Run "spotify-analytics init" first or set SPOTIFY_SP_DC and SPOTIFY_SP_KEY environment variables.');
+        process.exit(2);
+      }
+
+      const analytics = new SpotifyAnalytics({ credentials });
+      const connector = (analytics as any).getConnector('dummy');
+      const userInfo = await connector.me();
+
+      logger.info('User Information:');
+      console.log(JSON.stringify(userInfo, null, 2));
+    } catch (error) {
+      logger.error(`Failed to get user info: ${(error as Error).message}`);
       if (program.opts().verbose) {
         console.error(error);
       }

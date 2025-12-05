@@ -2,41 +2,20 @@
  * Configuration file management
  */
 
+import { config as dotenvConfig } from 'dotenv';
 import { promises as fs } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
 
-export interface Config {
-  credentials: {
-    sp_dc: string;
-    sp_key: string;
-    client_id?: string;
-  };
-  defaults?: {
-    podcast_id?: string;
-    output_dir?: string;
-    date_range?: {
-      days?: number;
-    };
-  };
-  output?: {
-    format?: 'csv' | 'json';
-    delimiter?: string;
-    encoding?: string;
-    include_headers?: boolean;
-  };
-}
-
-const CONFIG_FILENAMES = [
-  '.spotify-analytics.json',
-  join(homedir(), '.spotify-analytics.json'),
-  '/etc/spotify-analytics.json',
+const ENV_FILENAMES = [
+  '.env',
+  join(homedir(), '.spotify-analytics.env'),
 ];
 
 /**
- * Find configuration file
+ * Find .env file
  */
-export async function findConfigFile(customPath?: string): Promise<string | null> {
+export async function findEnvFile(customPath?: string): Promise<string | null> {
   if (customPath) {
     try {
       await fs.access(customPath);
@@ -46,7 +25,7 @@ export async function findConfigFile(customPath?: string): Promise<string | null
     }
   }
 
-  for (const path of CONFIG_FILENAMES) {
+  for (const path of ENV_FILENAMES) {
     try {
       await fs.access(path);
       return path;
@@ -59,48 +38,49 @@ export async function findConfigFile(customPath?: string): Promise<string | null
 }
 
 /**
- * Load configuration from file
+ * Load environment variables from .env file
  */
-export async function loadConfig(customPath?: string): Promise<Config | null> {
-  const configPath = await findConfigFile(customPath);
-  if (!configPath) {
-    return null;
+export async function loadEnv(customPath?: string): Promise<void> {
+  const envPath = await findEnvFile(customPath);
+  if (envPath) {
+    dotenvConfig({ path: envPath });
   }
-
-  const content = await fs.readFile(configPath, 'utf-8');
-  return JSON.parse(content);
 }
 
 /**
- * Save configuration to file
+ * Save credentials to .env file
  */
-export async function saveConfig(config: Config, filePath?: string): Promise<string> {
-  const path = filePath || CONFIG_FILENAMES[0];
-  const content = JSON.stringify(config, null, 2);
-  await fs.writeFile(path, content, 'utf-8');
+export async function saveEnv(
+  credentials: { sp_dc: string; sp_key: string; client_id?: string },
+  filePath?: string
+): Promise<string> {
+  const path = filePath || ENV_FILENAMES[0];
+  const content = [
+    `SPOTIFY_SP_DC=${credentials.sp_dc}`,
+    `SPOTIFY_SP_KEY=${credentials.sp_key}`,
+    credentials.client_id ? `SPOTIFY_CLIENT_ID=${credentials.client_id}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  await fs.writeFile(path, content + '\n', 'utf-8');
   return path;
 }
 
 /**
- * Get credentials from config or environment variables
+ * Get credentials from environment variables
  */
-export function getCredentials(config?: Config | null): {
+export function getCredentials(): {
   sp_dc: string;
   sp_key: string;
   client_id?: string;
 } | null {
-  // Try environment variables first
   if (process.env.SPOTIFY_SP_DC && process.env.SPOTIFY_SP_KEY) {
     return {
       sp_dc: process.env.SPOTIFY_SP_DC,
       sp_key: process.env.SPOTIFY_SP_KEY,
       client_id: process.env.SPOTIFY_CLIENT_ID,
     };
-  }
-
-  // Then try config file
-  if (config?.credentials) {
-    return config.credentials;
   }
 
   return null;

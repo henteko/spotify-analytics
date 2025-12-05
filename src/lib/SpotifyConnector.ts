@@ -148,16 +148,14 @@ export class SpotifyConnector {
    * Ensure authentication token is valid
    */
   private async ensureAuth(): Promise<void> {
-    await this.authLock.runExclusive(async () => {
-      // Re-authenticate if token is missing or expires within 5 minutes
-      if (
-        !this.bearer ||
-        !this.bearerExpires ||
-        this.bearerExpires < new Date(Date.now() + 5 * 60 * 1000)
-      ) {
-        await this.authenticate();
-      }
-    });
+    // Re-authenticate if token is missing or expires within 5 minutes
+    if (
+      !this.bearer ||
+      !this.bearerExpires ||
+      this.bearerExpires < new Date(Date.now() + 5 * 60 * 1000)
+    ) {
+      await this.authenticate();
+    }
   }
 
   /**
@@ -416,8 +414,11 @@ export class SpotifyConnector {
   async catalog(): Promise<CatalogResponse> {
     const url = this.buildUrl('user', 'shows');
 
+    // Set wide date range to include all shows
     const end = new Date();
-    const start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
+    end.setFullYear(end.getFullYear() + 1); // 1 year in the future
+    const start = new Date();
+    start.setFullYear(start.getFullYear() - 10); // 10 years in the past
 
     return this.request({
       url,

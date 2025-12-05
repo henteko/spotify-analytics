@@ -92,12 +92,21 @@ export interface MetadataResponse {
 }
 
 export interface StreamsResponse {
-  dates: string[];
-  streams: Array<{
+  // Episode-level format
+  dates?: string[];
+  streams?: Array<{
     episodeId: string;
     episodeName: string;
     starts: number[];
     streams: number[];
+  }>;
+  // Podcast-level format
+  detailedStreams?: Array<{
+    date: string;
+    starts: number;
+    streams: number;
+    episodeId?: string;
+    episodeName?: string;
   }>;
 }
 
