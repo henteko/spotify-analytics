@@ -460,17 +460,14 @@ program
 // Analyze-dropout command
 program
   .command('analyze-dropout')
-  .description('Analyze dropout patterns using audio and performance data')
+  .description('Generate HTML visualization report for dropout analysis')
   .requiredOption('--podcast-id <id>', 'Podcast ID')
   .requiredOption('--episode-id <id>', 'Episode ID')
   .requiredOption('--audio <path>', 'Audio file path')
   .option('--segment-duration <seconds>', 'Segment duration in seconds', '60')
   .option('--language <lang>', 'Audio language', 'ja')
   .option('--model-path <path>', 'Path to whisper model file')
-  .option('-f, --format <format>', 'Output format (csv/json/html)', 'csv')
-  .option('--visualize', 'Generate HTML visualization')
-  .option('--categorize', 'Categorize topics automatically')
-  .option('--output-dir <dir>', 'Output directory for visualization', './output')
+  .option('--output-dir <dir>', 'Output directory for HTML report', './output')
   .option('--theme <theme>', 'Visualization theme (light/dark)', 'light')
   .action(async (options) => {
     const logger = new Logger(program.opts().verbose, program.opts().quiet);
@@ -506,65 +503,49 @@ program
 
       logger.info('Step 2: Calculating dropout rates...');
 
-      // Topic categorization
-      if (options.categorize) {
-        logger.info('Step 3: Categorizing topics...');
-        const topicModeler = new TopicModeler();
-        const categorizedSegments = topicModeler.extractTopicsFromDropout(result.segments);
-        result.segments = categorizedSegments;
+      // Topic categorization (always enabled)
+      logger.info('Step 3: Categorizing topics...');
+      const topicModeler = new TopicModeler();
+      const categorizedSegments = topicModeler.extractTopicsFromDropout(result.segments);
+      result.segments = categorizedSegments;
 
-        const distribution = topicModeler.getTopicDistribution(categorizedSegments);
-        const dropoutByTopic = topicModeler.getDropoutByTopic(categorizedSegments);
+      const distribution = topicModeler.getTopicDistribution(categorizedSegments);
+      const dropoutByTopic = topicModeler.getDropoutByTopic(categorizedSegments);
 
-        logger.info('Topic distribution:');
-        for (const [topic, count] of Object.entries(distribution)) {
-          const avg = dropoutByTopic[topic]?.averageDropoutRate.toFixed(1) || '0.0';
-          logger.info(`  ${topic}: ${count} segments (avg dropout: ${avg}%)`);
-        }
+      logger.info('Topic distribution:');
+      for (const [topic, count] of Object.entries(distribution)) {
+        const avg = dropoutByTopic[topic]?.averageDropoutRate.toFixed(1) || '0.0';
+        logger.info(`  ${topic}: ${count} segments (avg dropout: ${avg}%)`);
       }
 
       logger.info('Analysis complete!');
 
-      // Generate AI summary if visualizing
-      let aiSummary = null;
-      if (options.visualize || options.format === 'html') {
-        logger.info('Step 4: Generating AI-powered summary...');
-        const summaryGenerator = new AISummaryGenerator();
-        aiSummary = await summaryGenerator.generateSummary(result);
+      // Generate AI summary
+      logger.info('Step 4: Generating AI-powered summary...');
+      const summaryGenerator = new AISummaryGenerator();
+      const aiSummary = await summaryGenerator.generateSummary(result);
 
-        if (aiSummary) {
-          logger.info('AI summary generated successfully');
-        } else {
-          logger.warn('AI summary generation skipped (GEMINI_API_KEY not set)');
-        }
+      if (aiSummary) {
+        logger.info('AI summary generated successfully');
+      } else {
+        logger.warn('AI summary generation skipped (GEMINI_API_KEY not set)');
       }
 
-      // Generate visualization
-      if (options.visualize || options.format === 'html') {
-        const { promises: fs } = await import('fs');
-        await fs.mkdir(options.outputDir, { recursive: true });
+      // Generate HTML visualization
+      const { promises: fs } = await import('fs');
+      await fs.mkdir(options.outputDir, { recursive: true });
 
-        const visualizer = new DropoutVisualizer();
-        const htmlPath = `${options.outputDir}/dropout-analysis-${options.episodeId}.html`;
-        visualizer.generateHTML(result, {
-          outputPath: htmlPath,
-          title: `Dropout Analysis - ${result.episodeName}`,
-          theme: options.theme,
-          aiSummary,
-        });
-        logger.info(`Visualization saved to: ${htmlPath}`);
-      }
+      const visualizer = new DropoutVisualizer();
+      const htmlPath = `${options.outputDir}/dropout-analysis-${options.episodeId}.html`;
+      visualizer.generateHTML(result, {
+        outputPath: htmlPath,
+        title: `Dropout Analysis - ${result.episodeName}`,
+        theme: options.theme,
+        aiSummary,
+      });
 
-      // Output data
-      if (options.format === 'csv') {
-        const { CSVExporter } = await import('../exporters');
-        const exporter = new CSVExporter();
-        console.log(exporter.stringify(result.segments));
-      } else if (options.format === 'json') {
-        console.log(JSON.stringify(result, null, 2));
-      } else if (options.format === 'html') {
-        // Already generated above
-      }
+      logger.info(`✅ HTML report saved to: ${htmlPath}`);
+      logger.info(`Open it in your browser to view the interactive analysis!`);
     } catch (error) {
       logger.error(`Failed to analyze dropout: ${(error as Error).message}`);
       if (program.opts().verbose) {

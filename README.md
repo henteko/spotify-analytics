@@ -303,7 +303,7 @@ npm run dev -- export-all \
 - `-f, --format <format>`: 出力形式 (`csv`, `json`, または `both`、デフォルト: `csv`)
 
 ### `analyze-dropout`
-音声データとパフォーマンスデータを組み合わせて、どの話題でリスナーが離脱しているかを分析します。
+音声データとパフォーマンスデータを組み合わせて、インタラクティブなHTMLレポートを生成します。
 
 **セットアップ（初回のみ）:**
 
@@ -323,42 +323,25 @@ echo "GEMINI_API_KEY=your_api_key_here" >> .env
 **使用例:**
 
 ```bash
-# 基本的な使用
+# 基本的な使用（HTMLレポート生成）
 npm run dev -- analyze-dropout \
   --podcast-id YOUR_ID \
   --episode-id EPISODE_ID \
   --audio ./audio/episode.mp3
 
-# HTMLビジュアライゼーション付き分析（グラフ・ヒートマップ生成）
+# ダークテーマで生成
 npm run dev -- analyze-dropout \
   --podcast-id YOUR_ID \
   --episode-id EPISODE_ID \
   --audio ./audio/episode.mp3 \
-  --visualize
+  --theme dark
 
-# トピック自動分類機能を有効化
+# 出力先ディレクトリを指定
 npm run dev -- analyze-dropout \
   --podcast-id YOUR_ID \
   --episode-id EPISODE_ID \
   --audio ./audio/episode.mp3 \
-  --categorize
-
-# ビジュアライゼーション + トピック分類 + ダークテーマ
-npm run dev -- analyze-dropout \
-  --podcast-id YOUR_ID \
-  --episode-id EPISODE_ID \
-  --audio ./audio/episode.mp3 \
-  --visualize \
-  --categorize \
-  --theme dark \
   --output-dir ./reports
-
-# JSON形式で詳細分析
-npm run dev -- analyze-dropout \
-  --podcast-id YOUR_ID \
-  --episode-id EPISODE_ID \
-  --audio ./audio/episode.mp3 \
-  -f json > dropout_analysis.json
 
 # セグメント長を30秒に変更
 npm run dev -- analyze-dropout \
@@ -389,19 +372,15 @@ npm run dev -- analyze-dropout \
 - `--segment-duration <seconds>`: セグメント長（秒、デフォルト: `60`）
 - `--language <lang>`: 音声言語（デフォルト: `ja`）
 - `--model-path <path>`: Whisperモデルファイルのパス（デフォルト: `whisper.cpp/models/ggml-base.bin`）
-- `-f, --format <format>`: 出力形式 (`csv`, `json`, `html`、デフォルト: `csv`)
-- `--visualize`: HTMLビジュアライゼーションを生成（グラフ・ヒートマップ）
-- `--categorize`: 話題の自動カテゴリ分類を有効化
 - `--output-dir <dir>`: 出力ディレクトリ（デフォルト: `./output`）
 - `--theme <theme>`: ビジュアライゼーションのテーマ（`light` または `dark`、デフォルト: `light`）
 
-**出力例（CSV）:**
-```csv
-segment,startTime,endTime,startPercentage,endPercentage,topic,transcript,listenersStart,listenersEnd,dropoutCount,dropoutRate,retentionRate
-1,0,60,0.0,2.8,今日はVS Codeの拡張機能について...,今日はVS Codeの拡張機能について話します...,1000,950,50,5.0,95.0
-2,60,120,2.8,5.6,最初に紹介するのは...,最初に紹介するのはGitLensです...,950,920,30,3.2,96.8
-3,120,180,5.6,8.3,設定ファイルの詳細な説明...,設定ファイルの詳細な説明をします...,920,770,150,16.3,83.7
-```
+**生成されるレポート内容:**
+- 🤖 **AI分析サマリー**: Gemini APIによる全体分析と具体的な改善提案
+- 📊 **Key Metrics**: 総リスナー数、平均離脱率、最大離脱セグメントなど
+- 🔥 **ヒートマップ**: セグメント別離脱率の視覚的表示
+- 📈 **グラフ**: 離脱率推移とリスナー数推移の折れ線グラフ
+- 📝 **詳細分析**: セグメントごとの詳細情報とトピック分類
 
 **モデルサイズの選択:**
 - `tiny`: 最速、低精度（75MB）
