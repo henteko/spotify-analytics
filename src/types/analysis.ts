@@ -29,12 +29,16 @@ export interface DropoutSegment {
   retentionRate: number;
 }
 
+export interface CategorizedDropoutSegment extends DropoutSegment {
+  category: string;
+}
+
 export interface DropoutAnalysisResult {
   episodeId: string;
   episodeName: string;
   duration: number;
   totalSamples: number;
-  segments: DropoutSegment[];
+  segments: DropoutSegment[] | CategorizedDropoutSegment[];
   summary: {
     highestDropoutSegment?: {
       segment: number;

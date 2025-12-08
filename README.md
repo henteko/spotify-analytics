@@ -324,6 +324,30 @@ npm run dev -- analyze-dropout \
   --episode-id EPISODE_ID \
   --audio ./audio/episode.mp3
 
+# HTMLビジュアライゼーション付き分析（グラフ・ヒートマップ生成）
+npm run dev -- analyze-dropout \
+  --podcast-id YOUR_ID \
+  --episode-id EPISODE_ID \
+  --audio ./audio/episode.mp3 \
+  --visualize
+
+# トピック自動分類機能を有効化
+npm run dev -- analyze-dropout \
+  --podcast-id YOUR_ID \
+  --episode-id EPISODE_ID \
+  --audio ./audio/episode.mp3 \
+  --categorize
+
+# ビジュアライゼーション + トピック分類 + ダークテーマ
+npm run dev -- analyze-dropout \
+  --podcast-id YOUR_ID \
+  --episode-id EPISODE_ID \
+  --audio ./audio/episode.mp3 \
+  --visualize \
+  --categorize \
+  --theme dark \
+  --output-dir ./reports
+
 # JSON形式で詳細分析
 npm run dev -- analyze-dropout \
   --podcast-id YOUR_ID \
@@ -360,7 +384,11 @@ npm run dev -- analyze-dropout \
 - `--segment-duration <seconds>`: セグメント長（秒、デフォルト: `60`）
 - `--language <lang>`: 音声言語（デフォルト: `ja`）
 - `--model-path <path>`: Whisperモデルファイルのパス（デフォルト: `whisper.cpp/models/ggml-base.bin`）
-- `-f, --format <format>`: 出力形式 (`csv` または `json`、デフォルト: `csv`)
+- `-f, --format <format>`: 出力形式 (`csv`, `json`, `html`、デフォルト: `csv`)
+- `--visualize`: HTMLビジュアライゼーションを生成（グラフ・ヒートマップ）
+- `--categorize`: 話題の自動カテゴリ分類を有効化
+- `--output-dir <dir>`: 出力ディレクトリ（デフォルト: `./output`）
+- `--theme <theme>`: ビジュアライゼーションのテーマ（`light` または `dark`、デフォルト: `light`）
 
 **出力例（CSV）:**
 ```csv
@@ -381,6 +409,15 @@ segment,startTime,endTime,startPercentage,endPercentage,topic,transcript,listene
 - ✅ 完全無料（ローカル実行）
 - ✅ プライバシー保護（音声データが外部送信されない）
 - ✅ オフライン動作可能
+- ✅ インタラクティブなHTMLビジュアライゼーション
+  - 離脱率推移の折れ線グラフ
+  - リスナー数推移の折れ線グラフ
+  - セグメント別離脱率ヒートマップ
+  - 詳細なセグメント情報の表示
+- ✅ 自動トピック分類
+  - 技術・開発、歴史・背景、機能・特徴、問題・課題など
+  - トピック別離脱率の統計情報
+  - カテゴリ別の分析レポート
 
 ## ライブラリAPI
 
@@ -415,6 +452,78 @@ const analytics = new SpotifyAnalytics({
 - `exportToJSON(data, filePath)`: JSON出力
 - `exportAll(options)`: 一括エクスポート
 
+#### `LocalWhisperClient`
+
+ローカルで音声を文字起こしするためのクライアントです。
+
+```typescript
+import { LocalWhisperClient } from 'spotify-analytics';
+
+const whisper = new LocalWhisperClient({
+  language: 'ja',
+  modelPath: './whisper.cpp/models/ggml-base.bin'
+});
+
+// 音声ファイルを文字起こし
+const transcript = await whisper.transcribe('./audio/episode.mp3');
+
+// セグメント分割
+const segments = whisper.splitIntoSegments(transcript, 60);
+```
+
+#### `DropoutAnalyzer`
+
+リスナーの離脱分析を行うクラスです。
+
+```typescript
+import { DropoutAnalyzer } from 'spotify-analytics';
+
+const analyzer = new DropoutAnalyzer(spotifyAnalytics);
+
+const result = await analyzer.analyzeDropout({
+  podcastId: 'YOUR_ID',
+  episodeId: 'EPISODE_ID',
+  audioFilePath: './audio/episode.mp3',
+  segmentDuration: 60,
+  language: 'ja'
+});
+
+console.log(result.summary.averageDropoutRate);
+```
+
+#### `TopicModeler`
+
+トピック分類を行うクラスです。
+
+```typescript
+import { TopicModeler } from 'spotify-analytics';
+
+const modeler = new TopicModeler();
+
+// Dropout segmentsをカテゴリ分類
+const categorized = modeler.extractTopicsFromDropout(result.segments);
+
+// トピック別統計
+const distribution = modeler.getTopicDistribution(categorized);
+const dropoutByTopic = modeler.getDropoutByTopic(categorized);
+```
+
+#### `DropoutVisualizer`
+
+分析結果をHTMLで可視化するクラスです。
+
+```typescript
+import { DropoutVisualizer } from 'spotify-analytics';
+
+const visualizer = new DropoutVisualizer();
+
+visualizer.generateHTML(result, {
+  outputPath: './output/analysis.html',
+  title: 'Dropout Analysis Report',
+  theme: 'dark'
+});
+```
+
 #### `SpotifyConnector` (低レベルAPI)
 
 直接APIを呼び出す場合に使用します。通常は`SpotifyAnalytics`の使用を推奨します。
@@ -436,20 +545,27 @@ npm run build
 ```
 spotify-analytics/
 ├── src/
-│   ├── lib/                  # ライブラリコア
+│   ├── lib/                       # ライブラリコア
 │   │   ├── SpotifyAnalytics.ts    # 高レベルAPI
-│   │   └── SpotifyConnector.ts    # 低レベルAPI
-│   ├── cli/                  # CLIツール
-│   │   ├── index.ts          # CLIエントリーポイント
-│   │   ├── commands/         # CLIコマンド
-│   │   └── utils/            # CLI用ユーティリティ
-│   ├── exporters/            # CSV/JSONエクスポーター
-│   ├── types/                # TypeScript型定義
-│   └── utils/                # 共通ユーティリティ
-├── .env                      # 環境変数（gitignoreに含む）
-├── .env.example              # 環境変数のサンプル
-├── internal-docs/            # ドキュメント
-└── dist/                     # ビルド出力
+│   │   ├── SpotifyConnector.ts    # 低レベルAPI
+│   │   ├── LocalWhisperClient.ts  # Whisper.cpp連携
+│   │   ├── DropoutAnalyzer.ts     # 離脱分析
+│   │   ├── DropoutVisualizer.ts   # HTMLビジュアライゼーション
+│   │   └── TopicModeler.ts        # トピック自動分類
+│   ├── cli/                       # CLIツール
+│   │   ├── index.ts               # CLIエントリーポイント
+│   │   ├── commands/              # CLIコマンド
+│   │   └── utils/                 # CLI用ユーティリティ
+│   ├── exporters/                 # CSV/JSONエクスポーター
+│   ├── types/                     # TypeScript型定義
+│   └── utils/                     # 共通ユーティリティ
+├── whisper.cpp/                   # Whisper.cppサブモジュール
+├── scripts/                       # セットアップスクリプト
+│   └── setup-whisper.sh          # Whisper.cppセットアップ
+├── .env                           # 環境変数（gitignoreに含む）
+├── .env.example                   # 環境変数のサンプル
+├── internal-docs/                 # ドキュメント
+└── dist/                          # ビルド出力
 ```
 
 ## トラブルシューティング

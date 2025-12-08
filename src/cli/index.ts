@@ -467,7 +467,11 @@ program
   .option('--segment-duration <seconds>', 'Segment duration in seconds', '60')
   .option('--language <lang>', 'Audio language', 'ja')
   .option('--model-path <path>', 'Path to whisper model file')
-  .option('-f, --format <format>', 'Output format (csv/json)', 'csv')
+  .option('-f, --format <format>', 'Output format (csv/json/html)', 'csv')
+  .option('--visualize', 'Generate HTML visualization')
+  .option('--categorize', 'Categorize topics automatically')
+  .option('--output-dir <dir>', 'Output directory for visualization', './output')
+  .option('--theme <theme>', 'Visualization theme (light/dark)', 'light')
   .action(async (options) => {
     const logger = new Logger(program.opts().verbose, program.opts().quiet);
 
@@ -481,7 +485,7 @@ program
       }
 
       const analytics = new SpotifyAnalytics({ credentials });
-      const { DropoutAnalyzer } = await import('../lib');
+      const { DropoutAnalyzer, DropoutVisualizer, TopicModeler } = await import('../lib');
 
       logger.info('Using whisper.cpp for local transcription');
       logger.info('Make sure whisper.cpp is installed: https://github.com/ggerganov/whisper.cpp');
@@ -501,14 +505,50 @@ program
       });
 
       logger.info('Step 2: Calculating dropout rates...');
+
+      // Topic categorization
+      if (options.categorize) {
+        logger.info('Step 3: Categorizing topics...');
+        const topicModeler = new TopicModeler();
+        const categorizedSegments = topicModeler.extractTopicsFromDropout(result.segments);
+        result.segments = categorizedSegments;
+
+        const distribution = topicModeler.getTopicDistribution(categorizedSegments);
+        const dropoutByTopic = topicModeler.getDropoutByTopic(categorizedSegments);
+
+        logger.info('Topic distribution:');
+        for (const [topic, count] of Object.entries(distribution)) {
+          const avg = dropoutByTopic[topic]?.averageDropoutRate.toFixed(1) || '0.0';
+          logger.info(`  ${topic}: ${count} segments (avg dropout: ${avg}%)`);
+        }
+      }
+
       logger.info('Analysis complete!');
 
+      // Generate visualization
+      if (options.visualize || options.format === 'html') {
+        const { promises: fs } = await import('fs');
+        await fs.mkdir(options.outputDir, { recursive: true });
+
+        const visualizer = new DropoutVisualizer();
+        const htmlPath = `${options.outputDir}/dropout-analysis-${options.episodeId}.html`;
+        visualizer.generateHTML(result, {
+          outputPath: htmlPath,
+          title: `Dropout Analysis - ${result.episodeName}`,
+          theme: options.theme,
+        });
+        logger.info(`Visualization saved to: ${htmlPath}`);
+      }
+
+      // Output data
       if (options.format === 'csv') {
         const { CSVExporter } = await import('../exporters');
         const exporter = new CSVExporter();
         console.log(exporter.stringify(result.segments));
-      } else {
+      } else if (options.format === 'json') {
         console.log(JSON.stringify(result, null, 2));
+      } else if (options.format === 'html') {
+        // Already generated above
       }
     } catch (error) {
       logger.error(`Failed to analyze dropout: ${(error as Error).message}`);
