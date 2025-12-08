@@ -41,6 +41,13 @@ output/
 !package.json
 !tsconfig.json
 
+# Audio files
+*.mp3
+*.wav
+*.m4a
+*.ogg
+*.flac
+
 # Whisper.cpp build artifacts
 whisper.cpp/build/
 whisper.cpp/models/*.bin
