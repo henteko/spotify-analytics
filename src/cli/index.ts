@@ -38,6 +38,7 @@ program
   .option('--end <date>', 'End date (YYYY-MM-DD)')
   .option('--episode-id <id>', 'Specific episode ID')
   .option('-f, --format <format>', 'Output format (csv/json)', 'csv')
+  .option('--raw', 'Output raw API response')
   .action(async (options) => {
     const logger = new Logger(program.opts().verbose, program.opts().quiet);
 
@@ -51,8 +52,16 @@ program
       }
 
       const analytics = new SpotifyAnalytics({ credentials });
+      const connector = (analytics as any).getConnector(options.podcastId);
       const start = new Date(options.start);
       const end = options.end ? new Date(options.end) : undefined;
+
+      // Output raw API response if requested
+      if (options.raw) {
+        const rawResponse = await connector.streams(start, end || start, options.episodeId);
+        console.log(JSON.stringify(rawResponse, null, 2));
+        return;
+      }
 
       const streams = await analytics.getStreams({
         podcastId: options.podcastId,
@@ -83,6 +92,7 @@ program
   .option('--end <date>', 'End date (YYYY-MM-DD)')
   .option('--limit <number>', 'Maximum number of episodes', parseInt)
   .option('-f, --format <format>', 'Output format (csv/json)', 'csv')
+  .option('--raw', 'Output raw API response')
   .action(async (options) => {
     const logger = new Logger(program.opts().verbose, program.opts().quiet);
 
@@ -96,6 +106,24 @@ program
       }
 
       const analytics = new SpotifyAnalytics({ credentials });
+      const connector = (analytics as any).getConnector(options.podcastId);
+
+      // Output raw API response if requested
+      if (options.raw) {
+        const start = options.start ? new Date(options.start) : new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+        const end = options.end ? new Date(options.end) : new Date();
+        const episodes = [];
+        let count = 0;
+        const limit = options.limit || 10;
+
+        for await (const episode of connector.episodes({ start, end, sortBy: 'releaseDate', sortOrder: 'descending' })) {
+          episodes.push(episode);
+          count++;
+          if (count >= limit) break;
+        }
+        console.log(JSON.stringify(episodes, null, 2));
+        return;
+      }
 
       const episodes = await analytics.getEpisodes({
         podcastId: options.podcastId,
@@ -163,6 +191,237 @@ program
       if (program.opts().verbose) {
         console.error(error);
       }
+      process.exit(1);
+    }
+  });
+
+// Listeners command
+program
+  .command('listeners')
+  .description('Get listeners data')
+  .requiredOption('--podcast-id <id>', 'Podcast ID')
+  .requiredOption('--start <date>', 'Start date (YYYY-MM-DD)')
+  .option('--end <date>', 'End date (YYYY-MM-DD)')
+  .option('--episode-id <id>', 'Specific episode ID')
+  .option('-f, --format <format>', 'Output format (csv/json)', 'csv')
+  .option('--raw', 'Output raw API response')
+  .action(async (options) => {
+    const logger = new Logger(program.opts().verbose, program.opts().quiet);
+
+    try {
+      await loadEnv(program.opts().config);
+      const credentials = getCredentials();
+
+      if (!credentials) {
+        logger.error('No credentials found. Run "spotify-analytics init" first or set SPOTIFY_SP_DC and SPOTIFY_SP_KEY environment variables.');
+        process.exit(2);
+      }
+
+      const analytics = new SpotifyAnalytics({ credentials });
+      const connector = (analytics as any).getConnector(options.podcastId);
+      const start = new Date(options.start);
+      const end = options.end ? new Date(options.end) : undefined;
+
+      // Output raw API response if requested
+      if (options.raw) {
+        const rawResponse = await connector.listeners(start, end || start, options.episodeId);
+        console.log(JSON.stringify(rawResponse, null, 2));
+        return;
+      }
+
+      const listeners = await analytics.getListeners({
+        podcastId: options.podcastId,
+        episodeId: options.episodeId,
+        start,
+        end,
+      });
+
+      if (options.format === 'csv') {
+        const { CSVExporter } = await import('../exporters');
+        const exporter = new CSVExporter();
+        console.log(exporter.stringify(listeners));
+      } else {
+        console.log(JSON.stringify(listeners, null, 2));
+      }
+    } catch (error) {
+      logger.error(`Failed to get listeners: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// Followers command
+program
+  .command('followers')
+  .description('Get followers data')
+  .requiredOption('--podcast-id <id>', 'Podcast ID')
+  .requiredOption('--start <date>', 'Start date (YYYY-MM-DD)')
+  .option('--end <date>', 'End date (YYYY-MM-DD)')
+  .option('-f, --format <format>', 'Output format (csv/json)', 'csv')
+  .option('--raw', 'Output raw API response')
+  .action(async (options) => {
+    const logger = new Logger(program.opts().verbose, program.opts().quiet);
+
+    try {
+      await loadEnv(program.opts().config);
+      const credentials = getCredentials();
+
+      if (!credentials) {
+        logger.error('No credentials found. Run "spotify-analytics init" first or set SPOTIFY_SP_DC and SPOTIFY_SP_KEY environment variables.');
+        process.exit(2);
+      }
+
+      const analytics = new SpotifyAnalytics({ credentials });
+      const connector = (analytics as any).getConnector(options.podcastId);
+      const start = new Date(options.start);
+      const end = options.end ? new Date(options.end) : undefined;
+
+      // Output raw API response if requested
+      if (options.raw) {
+        const rawResponse = await connector.followers(start, end || start);
+        console.log(JSON.stringify(rawResponse, null, 2));
+        return;
+      }
+
+      const followers = await analytics.getFollowers({
+        podcastId: options.podcastId,
+        start,
+        end,
+      });
+
+      if (options.format === 'csv') {
+        const { CSVExporter } = await import('../exporters');
+        const exporter = new CSVExporter();
+        console.log(exporter.stringify(followers));
+      } else {
+        console.log(JSON.stringify(followers, null, 2));
+      }
+    } catch (error) {
+      logger.error(`Failed to get followers: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// Demographics command
+program
+  .command('demographics')
+  .description('Get demographics data')
+  .requiredOption('--podcast-id <id>', 'Podcast ID')
+  .requiredOption('--start <date>', 'Start date (YYYY-MM-DD)')
+  .option('--end <date>', 'End date (YYYY-MM-DD)')
+  .option('--episode-id <id>', 'Specific episode ID')
+  .option('--facet <facet>', 'Demographic facet (age/gender/country/all)', 'all')
+  .option('-f, --format <format>', 'Output format (csv/json)', 'csv')
+  .option('--raw', 'Output raw API response')
+  .action(async (options) => {
+    const logger = new Logger(program.opts().verbose, program.opts().quiet);
+
+    try {
+      await loadEnv(program.opts().config);
+      const credentials = getCredentials();
+
+      if (!credentials) {
+        logger.error('No credentials found. Run "spotify-analytics init" first or set SPOTIFY_SP_DC and SPOTIFY_SP_KEY environment variables.');
+        process.exit(2);
+      }
+
+      const analytics = new SpotifyAnalytics({ credentials });
+      const connector = (analytics as any).getConnector(options.podcastId);
+      const start = new Date(options.start);
+      const end = options.end ? new Date(options.end) : undefined;
+
+      // Output raw API response if requested
+      if (options.raw) {
+        const rawResponse = await connector.aggregate(start, end || start, options.episodeId);
+        console.log(JSON.stringify(rawResponse, null, 2));
+        return;
+      }
+
+      const demographics = await analytics.getDemographics({
+        podcastId: options.podcastId,
+        episodeId: options.episodeId,
+        start,
+        end,
+        facet: options.facet,
+      });
+
+      if (options.format === 'csv') {
+        // Flatten demographics data for CSV output
+        const flatData: any[] = [];
+        for (const [facetType, facetData] of Object.entries(demographics)) {
+          for (const [key, value] of Object.entries(facetData as Record<string, any>)) {
+            flatData.push({
+              facet: facetType,
+              category: key,
+              percentage: value.percentage,
+              listenerCount: value.listenerCount,
+              countryName: value.countryName || '',
+            });
+          }
+        }
+        const { CSVExporter } = await import('../exporters');
+        const exporter = new CSVExporter();
+        console.log(exporter.stringify(flatData));
+      } else {
+        console.log(JSON.stringify(demographics, null, 2));
+      }
+    } catch (error) {
+      logger.error(`Failed to get demographics: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// Performance command
+program
+  .command('performance')
+  .description('Get episode performance data')
+  .requiredOption('--podcast-id <id>', 'Podcast ID')
+  .requiredOption('--episode-id <id>', 'Episode ID')
+  .option('-f, --format <format>', 'Output format (csv/json)', 'csv')
+  .option('--raw', 'Output raw API response')
+  .option('--metadata', 'Output raw metadata API response')
+  .action(async (options) => {
+    const logger = new Logger(program.opts().verbose, program.opts().quiet);
+
+    try {
+      await loadEnv(program.opts().config);
+      const credentials = getCredentials();
+
+      if (!credentials) {
+        logger.error('No credentials found. Run "spotify-analytics init" first or set SPOTIFY_SP_DC and SPOTIFY_SP_KEY environment variables.');
+        process.exit(2);
+      }
+
+      const analytics = new SpotifyAnalytics({
+        credentials,
+        podcastId: options.podcastId
+      });
+      const connector = (analytics as any).getConnector(options.podcastId);
+
+      // Output raw metadata API response if requested
+      if (options.metadata) {
+        const rawMetadata = await connector.metadata(options.episodeId);
+        console.log(JSON.stringify(rawMetadata, null, 2));
+        return;
+      }
+
+      // Output raw API response if requested
+      if (options.raw) {
+        const rawResponse = await connector.performance(options.episodeId);
+        console.log(JSON.stringify(rawResponse, null, 2));
+        return;
+      }
+
+      const performance = await analytics.getPerformance(options.episodeId);
+
+      if (options.format === 'csv') {
+        const { CSVExporter } = await import('../exporters');
+        const exporter = new CSVExporter();
+        console.log(exporter.stringify([performance]));
+      } else {
+        console.log(JSON.stringify(performance, null, 2));
+      }
+    } catch (error) {
+      logger.error(`Failed to get performance: ${(error as Error).message}`);
       process.exit(1);
     }
   });

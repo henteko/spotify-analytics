@@ -75,6 +75,13 @@ export interface ExportResult {
 // Raw API response types
 
 export interface MetadataResponse {
+  // Direct episode properties
+  id?: string;
+  name?: string;
+  description?: string;
+  duration?: number;
+  releaseDate?: string;
+  // Nested show/episode properties (older format)
   show?: {
     id: string;
     name: string;
@@ -111,23 +118,45 @@ export interface StreamsResponse {
 }
 
 export interface ListenersResponse {
-  dates: string[];
-  listeners: Array<{
+  // Array format
+  dates?: string[];
+  listeners?: Array<{
     episodeId: string;
     episodeName: string;
     count: number[];
   }>;
+  // Object array format
+  counts?: Array<{
+    date: string;
+    count: number;
+  }>;
 }
 
 export interface FollowersResponse {
-  dates: string[];
-  followers: number[];
+  // Array format
+  dates?: string[];
+  followers?: number[];
+  // Object array format
+  counts?: Array<{
+    date: string;
+    count: number;
+  }>;
 }
 
 export interface AggregateResponse {
-  age: Record<string, number>;
-  gender: Record<string, number>;
-  country: Record<string, number>;
+  // Simple format
+  age?: Record<string, number>;
+  gender?: Record<string, number>;
+  country?: Record<string, number>;
+  // Faceted format
+  count?: number;
+  ageFacetedCounts?: Record<string, {
+    counts: Record<string, number>;
+  }>;
+  genderedCounts?: {
+    counts: Record<string, number>;
+  };
+  countryCounts?: Record<string, number>;
 }
 
 export interface ImpressionsResponse {
@@ -158,10 +187,12 @@ export interface CatalogResponse {
 }
 
 export interface PerformanceResponse {
-  episodeId: string;
-  averageListenPercentage: number;
-  medianListenPercentage: number;
+  episodeId?: string;
+  averageListenPercentage?: number;
+  medianListenPercentage?: number;
   completionRate?: number;
+  // Samples array format
+  samples?: number[];
 }
 
 export interface UserResponse {

@@ -66,6 +66,9 @@ npm run dev -- episodes --podcast-id YOUR_PODCAST_ID --start 2024-01-01 -f json
 
 # JSON形式でファイルに保存
 npm run dev -- episodes --podcast-id YOUR_PODCAST_ID --start 2024-01-01 -f json > episodes.json
+
+# API生レスポンスを出力（デバッグ用）
+npm run dev -- streams --podcast-id YOUR_PODCAST_ID --start 2024-01-01 --raw
 ```
 
 ### ライブラリとして使用
@@ -153,6 +156,7 @@ npm run dev -- episodes --podcast-id YOUR_ID --start 2024-01-01 > episodes.csv
 - `--end <date>`: 終了日 (YYYY-MM-DD)
 - `--limit <number>`: 最大取得数
 - `-f, --format <format>`: 出力形式 (`csv` または `json`、デフォルト: `csv`)
+- `--raw`: API生レスポンスを出力（デバッグ用）
 
 ### `streams`
 ストリーム数データを取得します。
@@ -169,6 +173,9 @@ npm run dev -- streams --podcast-id YOUR_ID --episode-id EPISODE_ID --start 2024
 
 # ファイルに保存
 npm run dev -- streams --podcast-id YOUR_ID --start 2024-01-01 > streams.csv
+
+# API生レスポンス出力
+npm run dev -- streams --podcast-id YOUR_ID --start 2024-01-01 --raw
 ```
 
 **オプション:**
@@ -177,6 +184,98 @@ npm run dev -- streams --podcast-id YOUR_ID --start 2024-01-01 > streams.csv
 - `--end <date>`: 終了日 (YYYY-MM-DD)
 - `--episode-id <id>`: 特定のエピソードID
 - `-f, --format <format>`: 出力形式 (`csv` または `json`、デフォルト: `csv`)
+- `--raw`: API生レスポンスを出力（デバッグ用）
+
+### `listeners`
+リスナー数データを取得します。
+
+```bash
+# CSV形式（デフォルト）
+npm run dev -- listeners --podcast-id YOUR_ID --start 2024-01-01 --end 2024-01-31
+
+# JSON形式で出力
+npm run dev -- listeners --podcast-id YOUR_ID --start 2024-01-01 -f json
+
+# 特定のエピソードのみ
+npm run dev -- listeners --podcast-id YOUR_ID --episode-id EPISODE_ID --start 2024-01-01
+
+# ファイルに保存
+npm run dev -- listeners --podcast-id YOUR_ID --start 2024-01-01 > listeners.csv
+```
+
+**オプション:**
+- `--podcast-id <id>` (必須): ポッドキャストID
+- `--start <date>` (必須): 開始日 (YYYY-MM-DD)
+- `--end <date>`: 終了日 (YYYY-MM-DD)
+- `--episode-id <id>`: 特定のエピソードID
+- `-f, --format <format>`: 出力形式 (`csv` または `json`、デフォルト: `csv`)
+- `--raw`: API生レスポンスを出力（デバッグ用）
+
+### `followers`
+フォロワー数データを取得します。
+
+```bash
+# CSV形式（デフォルト）
+npm run dev -- followers --podcast-id YOUR_ID --start 2024-01-01 --end 2024-01-31
+
+# JSON形式で出力
+npm run dev -- followers --podcast-id YOUR_ID --start 2024-01-01 -f json
+
+# ファイルに保存
+npm run dev -- followers --podcast-id YOUR_ID --start 2024-01-01 > followers.csv
+```
+
+**オプション:**
+- `--podcast-id <id>` (必須): ポッドキャストID
+- `--start <date>` (必須): 開始日 (YYYY-MM-DD)
+- `--end <date>`: 終了日 (YYYY-MM-DD)
+- `-f, --format <format>`: 出力形式 (`csv` または `json`、デフォルト: `csv`)
+- `--raw`: API生レスポンスを出力（デバッグ用）
+
+### `demographics`
+デモグラフィック情報（年齢・性別・国）を取得します。
+
+```bash
+# すべてのデモグラフィック情報
+npm run dev -- demographics --podcast-id YOUR_ID --start 2024-01-01 --end 2024-01-31
+
+# 特定のファセットのみ
+npm run dev -- demographics --podcast-id YOUR_ID --start 2024-01-01 --facet age
+npm run dev -- demographics --podcast-id YOUR_ID --start 2024-01-01 --facet gender
+npm run dev -- demographics --podcast-id YOUR_ID --start 2024-01-01 --facet country
+
+# 特定のエピソード
+npm run dev -- demographics --podcast-id YOUR_ID --episode-id EPISODE_ID --start 2024-01-01
+
+# ファイルに保存
+npm run dev -- demographics --podcast-id YOUR_ID --start 2024-01-01 > demographics.json
+```
+
+**オプション:**
+- `--podcast-id <id>` (必須): ポッドキャストID
+- `--start <date>` (必須): 開始日 (YYYY-MM-DD)
+- `--end <date>`: 終了日 (YYYY-MM-DD)
+- `--episode-id <id>`: 特定のエピソードID
+- `--facet <facet>`: デモグラフィックファセット (`age`, `gender`, `country`, または `all`、デフォルト: `all`)
+- `-f, --format <format>`: 出力形式 (JSON のみ)
+- `--raw`: API生レスポンスを出力（デバッグ用）
+
+### `performance`
+エピソードのパフォーマンスデータを取得します。
+
+```bash
+# パフォーマンスデータ取得
+npm run dev -- performance --podcast-id YOUR_ID --episode-id EPISODE_ID
+
+# ファイルに保存
+npm run dev -- performance --podcast-id YOUR_ID --episode-id EPISODE_ID > performance.json
+```
+
+**オプション:**
+- `--podcast-id <id>` (必須): ポッドキャストID
+- `--episode-id <id>` (必須): エピソードID
+- `-f, --format <format>`: 出力形式 (JSON のみ)
+- `--raw`: API生レスポンスを出力（デバッグ用）
 
 ### `export-all`
 すべてのデータを一括でファイル出力します。

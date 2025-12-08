@@ -166,18 +166,35 @@ export class SpotifyAnalytics {
 
     const listenerData: ListenerData[] = [];
 
-    for (const episodeListeners of response.listeners) {
-      for (let i = 0; i < response.dates.length; i++) {
+    // Handle counts array format
+    if (response.counts && Array.isArray(response.counts)) {
+      for (const item of response.counts) {
         listenerData.push({
-          date: response.dates[i],
-          episodeId: episodeListeners.episodeId,
-          episodeName: episodeListeners.episodeName,
-          listeners: episodeListeners.count[i] || 0,
+          date: item.date,
+          episodeId: options.episodeId || '',
+          episodeName: '',
+          listeners: item.count || 0,
         });
       }
+      return listenerData;
     }
 
-    return listenerData;
+    // Handle dates/listeners array format
+    if (response.listeners && Array.isArray(response.listeners) && response.dates) {
+      for (const episodeListeners of response.listeners) {
+        for (let i = 0; i < response.dates.length; i++) {
+          listenerData.push({
+            date: response.dates[i],
+            episodeId: episodeListeners.episodeId,
+            episodeName: episodeListeners.episodeName,
+            listeners: episodeListeners.count[i] || 0,
+          });
+        }
+      }
+      return listenerData;
+    }
+
+    return listenerData; // Return empty if no data
   }
 
   /**
@@ -191,19 +208,39 @@ export class SpotifyAnalytics {
 
     const followerData: FollowerData[] = [];
 
-    for (let i = 0; i < response.dates.length; i++) {
-      const currentFollowers = response.followers[i] || 0;
-      const prevFollowers = i > 0 ? response.followers[i - 1] || 0 : currentFollowers;
-      const netChange = currentFollowers - prevFollowers;
+    // Handle counts array format
+    if (response.counts && Array.isArray(response.counts)) {
+      for (let i = 0; i < response.counts.length; i++) {
+        const currentFollowers = response.counts[i].count || 0;
+        const prevFollowers = i > 0 ? response.counts[i - 1].count || 0 : currentFollowers;
+        const netChange = currentFollowers - prevFollowers;
 
-      followerData.push({
-        date: response.dates[i],
-        followers: currentFollowers,
-        netChange: i === 0 ? 0 : netChange,
-      });
+        followerData.push({
+          date: response.counts[i].date,
+          followers: currentFollowers,
+          netChange: i === 0 ? 0 : netChange,
+        });
+      }
+      return followerData;
     }
 
-    return followerData;
+    // Handle dates/followers array format
+    if (response.dates && response.followers) {
+      for (let i = 0; i < response.dates.length; i++) {
+        const currentFollowers = response.followers[i] || 0;
+        const prevFollowers = i > 0 ? response.followers[i - 1] || 0 : currentFollowers;
+        const netChange = currentFollowers - prevFollowers;
+
+        followerData.push({
+          date: response.dates[i],
+          followers: currentFollowers,
+          netChange: i === 0 ? 0 : netChange,
+        });
+      }
+      return followerData;
+    }
+
+    throw new Error(`Invalid followers response format: ${JSON.stringify(response)}`);
   }
 
   /**
@@ -218,16 +255,51 @@ export class SpotifyAnalytics {
 
     const demographics: Demographics = {};
 
+    // Handle faceted format (ageFacetedCounts, genderedCounts, etc.)
+    if (response.ageFacetedCounts || response.genderedCounts || response.countryCounts) {
+      if (facet === 'all' || facet === 'age') {
+        if (response.ageFacetedCounts) {
+          const ageData: Record<string, number> = {};
+          for (const [ageRange, data] of Object.entries(response.ageFacetedCounts)) {
+            const total = Object.values(data.counts).reduce((sum, val) => sum + val, 0);
+            ageData[ageRange] = total;
+          }
+          demographics.age = this.convertDemographics(ageData);
+        }
+      }
+
+      if (facet === 'all' || facet === 'gender') {
+        if (response.genderedCounts?.counts) {
+          demographics.gender = this.convertDemographics(response.genderedCounts.counts);
+        }
+      }
+
+      if (facet === 'all' || facet === 'country') {
+        if (response.countryCounts) {
+          demographics.country = this.convertDemographics(response.countryCounts);
+        }
+      }
+
+      return demographics;
+    }
+
+    // Handle simple format (age, gender, country)
     if (facet === 'all' || facet === 'age') {
-      demographics.age = this.convertDemographics(response.age);
+      if (response.age) {
+        demographics.age = this.convertDemographics(response.age);
+      }
     }
 
     if (facet === 'all' || facet === 'gender') {
-      demographics.gender = this.convertDemographics(response.gender);
+      if (response.gender) {
+        demographics.gender = this.convertDemographics(response.gender);
+      }
     }
 
     if (facet === 'all' || facet === 'country') {
-      demographics.country = this.convertDemographics(response.country);
+      if (response.country) {
+        demographics.country = this.convertDemographics(response.country);
+      }
     }
 
     return demographics;
@@ -236,7 +308,11 @@ export class SpotifyAnalytics {
   /**
    * Convert raw demographics to structured format
    */
-  private convertDemographics(raw: Record<string, number>): Record<string, DemographicData> {
+  private convertDemographics(raw?: Record<string, number>): Record<string, DemographicData> {
+    if (!raw) {
+      return {};
+    }
+
     const total = Object.values(raw).reduce((sum, val) => sum + val, 0);
     const result: Record<string, DemographicData> = {};
 
@@ -260,12 +336,37 @@ export class SpotifyAnalytics {
     // Get episode metadata for name
     const metadata = await connector.metadata(episodeId);
 
+    let averageListenPercentage = response.averageListenPercentage || 0;
+    let medianListenPercentage = response.medianListenPercentage || 0;
+    let completionRate = response.completionRate || 0;
+
+    // Calculate statistics from samples array if available
+    if (response.samples && Array.isArray(response.samples) && response.samples.length > 0) {
+      const samples = response.samples;
+      const totalSamples = samples.length;
+
+      // Calculate average
+      const sum = samples.reduce((acc, val) => acc + val, 0);
+      averageListenPercentage = totalSamples > 0 ? (sum / totalSamples) : 0;
+
+      // Calculate median
+      const sorted = [...samples].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      medianListenPercentage = sorted.length % 2 === 0
+        ? (sorted[mid - 1] + sorted[mid]) / 2
+        : sorted[mid];
+
+      // Calculate completion rate (percentage of samples > 90%)
+      const completedCount = samples.filter(s => s > 90).length;
+      completionRate = totalSamples > 0 ? (completedCount / totalSamples) * 100 : 0;
+    }
+
     return {
-      episodeId: response.episodeId,
-      episodeName: metadata.episode?.name || 'Unknown',
-      averageListenPercentage: response.averageListenPercentage,
-      medianListenPercentage: response.medianListenPercentage,
-      completionRate: response.completionRate || 0,
+      episodeId: response.episodeId || episodeId,
+      episodeName: metadata.name || metadata.episode?.name || 'Unknown',
+      averageListenPercentage,
+      medianListenPercentage,
+      completionRate,
     };
   }
 
@@ -382,7 +483,28 @@ export class SpotifyAnalytics {
 
       if (format === 'csv' || format === 'both') {
         const csvPath = path.join(options.outputDir, `${fileName}.csv`);
-        await this.exportToCSV(Array.isArray(data) ? data : [data], csvPath);
+
+        // Flatten demographics data for CSV export
+        let csvData = data;
+        if (dataType === 'demographics') {
+          const flatData: any[] = [];
+          for (const [facetType, facetData] of Object.entries(data)) {
+            for (const [key, value] of Object.entries(facetData as Record<string, any>)) {
+              flatData.push({
+                facet: facetType,
+                category: key,
+                percentage: value.percentage,
+                listenerCount: value.listenerCount,
+                countryName: value.countryName || '',
+              });
+            }
+          }
+          csvData = flatData;
+        } else {
+          csvData = Array.isArray(data) ? data : [data];
+        }
+
+        await this.exportToCSV(csvData, csvPath);
         files.push(csvPath);
 
         const stats = await fs.stat(csvPath);
