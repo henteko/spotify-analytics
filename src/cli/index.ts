@@ -485,7 +485,7 @@ program
       }
 
       const analytics = new SpotifyAnalytics({ credentials });
-      const { DropoutAnalyzer, DropoutVisualizer, TopicModeler } = await import('../lib');
+      const { DropoutAnalyzer, DropoutVisualizer, TopicModeler, AISummaryGenerator } = await import('../lib');
 
       logger.info('Using whisper.cpp for local transcription');
       logger.info('Make sure whisper.cpp is installed: https://github.com/ggerganov/whisper.cpp');
@@ -525,6 +525,20 @@ program
 
       logger.info('Analysis complete!');
 
+      // Generate AI summary if visualizing
+      let aiSummary = null;
+      if (options.visualize || options.format === 'html') {
+        logger.info('Step 4: Generating AI-powered summary...');
+        const summaryGenerator = new AISummaryGenerator();
+        aiSummary = await summaryGenerator.generateSummary(result);
+
+        if (aiSummary) {
+          logger.info('AI summary generated successfully');
+        } else {
+          logger.warn('AI summary generation skipped (GEMINI_API_KEY not set)');
+        }
+      }
+
       // Generate visualization
       if (options.visualize || options.format === 'html') {
         const { promises: fs } = await import('fs');
@@ -536,6 +550,7 @@ program
           outputPath: htmlPath,
           title: `Dropout Analysis - ${result.episodeName}`,
           theme: options.theme,
+          aiSummary,
         });
         logger.info(`Visualization saved to: ${htmlPath}`);
       }

@@ -313,6 +313,11 @@ npm run setup:whisper
 
 # 別のモデルを使用する場合（オプション）
 npm run setup:whisper -- small  # small, medium, large など
+
+# AI分析機能を使用する場合（オプション）
+# .envファイルにGemini API Keyを追加
+echo "GEMINI_API_KEY=your_api_key_here" >> .env
+# API Keyの取得: https://aistudio.google.com/app/apikey
 ```
 
 **使用例:**
@@ -414,10 +419,16 @@ segment,startTime,endTime,startPercentage,endPercentage,topic,transcript,listene
   - リスナー数推移の折れ線グラフ
   - セグメント別離脱率ヒートマップ
   - 詳細なセグメント情報の表示
+  - プロフェッショナルなビジネスデザイン（Tailwind CSS）
 - ✅ 自動トピック分類
   - 技術・開発、歴史・背景、機能・特徴、問題・課題など
   - トピック別離脱率の統計情報
   - カテゴリ別の分析レポート
+- ✅ AI分析サマリー（Gemini API）
+  - 全体的な傾向の自動分析
+  - 重要な発見の抽出
+  - 具体的な改善提案の生成
+  - 問題のあるセグメントの詳細分析と改善案
 
 ## ライブラリAPI
 
@@ -513,16 +524,47 @@ const dropoutByTopic = modeler.getDropoutByTopic(categorized);
 分析結果をHTMLで可視化するクラスです。
 
 ```typescript
-import { DropoutVisualizer } from 'spotify-analytics';
+import { DropoutVisualizer, AISummaryGenerator } from 'spotify-analytics';
 
 const visualizer = new DropoutVisualizer();
+
+// AI分析サマリーを生成（オプション）
+const summaryGenerator = new AISummaryGenerator();
+const aiSummary = await summaryGenerator.generateSummary(result);
 
 visualizer.generateHTML(result, {
   outputPath: './output/analysis.html',
   title: 'Dropout Analysis Report',
-  theme: 'dark'
+  theme: 'dark',
+  aiSummary // AI分析結果を含める
 });
 ```
+
+#### `AISummaryGenerator`
+
+Gemini APIを使用してAI分析サマリーを生成するクラスです。
+
+```typescript
+import { AISummaryGenerator } from 'spotify-analytics';
+
+const generator = new AISummaryGenerator(process.env.GEMINI_API_KEY);
+
+// 分析結果からAIサマリーを生成
+const summary = await generator.generateSummary(dropoutAnalysisResult);
+
+if (summary) {
+  console.log('Overview:', summary.overview);
+  console.log('Key Findings:', summary.keyFindings);
+  console.log('Recommendations:', summary.recommendations);
+  console.log('Critical Segments:', summary.criticalSegments);
+}
+```
+
+**生成される情報:**
+- `overview`: 全体的な傾向と状況の説明
+- `keyFindings`: 重要な発見のリスト
+- `recommendations`: 具体的な改善提案のリスト
+- `criticalSegments`: 問題のあるセグメントの詳細分析と改善案
 
 #### `SpotifyConnector` (低レベルAPI)
 
@@ -551,7 +593,8 @@ spotify-analytics/
 │   │   ├── LocalWhisperClient.ts  # Whisper.cpp連携
 │   │   ├── DropoutAnalyzer.ts     # 離脱分析
 │   │   ├── DropoutVisualizer.ts   # HTMLビジュアライゼーション
-│   │   └── TopicModeler.ts        # トピック自動分類
+│   │   ├── TopicModeler.ts        # トピック自動分類
+│   │   └── AISummaryGenerator.ts  # AI分析サマリー生成
 │   ├── cli/                       # CLIツール
 │   │   ├── index.ts               # CLIエントリーポイント
 │   │   ├── commands/              # CLIコマンド
