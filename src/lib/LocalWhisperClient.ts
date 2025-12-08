@@ -39,31 +39,52 @@ export class LocalWhisperClient {
    * Transcribe using whisper.cpp
    */
   private async transcribeWithWhisperCpp(audioFilePath: string): Promise<TranscriptResult> {
-    // Check if whisper.cpp is installed
-    try {
-      await execAsync('which whisper-cpp 2>/dev/null || which main 2>/dev/null');
-    } catch {
-      throw new Error(
-        'whisper.cpp not found. Please install from https://github.com/ggerganov/whisper.cpp'
-      );
-    }
-
     const outputDir = path.dirname(audioFilePath);
     const baseName = path.basename(audioFilePath, path.extname(audioFilePath));
     const outputPath = path.join(outputDir, `${baseName}.json`);
 
-    // Determine whisper.cpp command (could be 'main' or 'whisper-cpp')
-    let whisperCmd = 'main';
-    try {
-      await execAsync('which whisper-cpp');
-      whisperCmd = 'whisper-cpp';
-    } catch {
-      // Use 'main' as default
+    // Determine whisper.cpp command path
+    const projectRoot = process.cwd();
+    const possiblePaths = [
+      path.join(projectRoot, 'whisper.cpp/build/bin/whisper-cli'),
+      path.join(projectRoot, 'whisper.cpp/build/bin/main'),
+      path.join(projectRoot, 'whisper.cpp/main'),
+      'whisper-cli',
+      'whisper-cpp',
+      'main',
+    ];
+
+    let whisperCmd: string | null = null;
+    for (const cmdPath of possiblePaths) {
+      try {
+        if (cmdPath.startsWith('/')) {
+          // Absolute path - check if file exists
+          if (require('fs').existsSync(cmdPath)) {
+            whisperCmd = cmdPath;
+            break;
+          }
+        } else {
+          // Command name - check if in PATH
+          await execAsync(`which ${cmdPath}`);
+          whisperCmd = cmdPath;
+          break;
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    if (!whisperCmd) {
+      throw new Error(
+        'whisper.cpp not found. Please run: npm run setup:whisper\n' +
+        'Or install from https://github.com/ggerganov/whisper.cpp'
+      );
     }
 
     // Build command
-    const modelArg = this.modelPath ? `-m ${this.modelPath}` : '-m models/ggml-base.bin';
-    const cmd = `${whisperCmd} ${modelArg} -l ${this.language} -oj -of ${path.join(outputDir, baseName)} "${audioFilePath}"`;
+    const defaultModelPath = path.join(projectRoot, 'whisper.cpp/models/ggml-base.bin');
+    const modelArg = this.modelPath ? `--model ${this.modelPath}` : `--model ${defaultModelPath}`;
+    const cmd = `"${whisperCmd}" ${modelArg} --language ${this.language} --output-json --output-file ${path.join(outputDir, baseName)} "${audioFilePath}"`;
 
     try {
       const { stdout, stderr } = await execAsync(cmd);
@@ -79,18 +100,31 @@ export class LocalWhisperClient {
       fs.unlinkSync(outputPath);
 
       // Convert to our format
-      const segments: TranscriptSegment[] = result.transcription?.map((seg: any) => ({
-        start: seg.timestamps?.from || seg.offsets?.from / 1000 || 0,
-        end: seg.timestamps?.to || seg.offsets?.to / 1000 || 0,
-        text: seg.text?.trim() || '',
-      })) || [];
+      const segments: TranscriptSegment[] = result.transcription?.map((seg: any) => {
+        // Parse timestamps in format "HH:MM:SS,mmm"
+        const parseTime = (timeStr: string): number => {
+          const parts = timeStr.split(':');
+          const hours = parseInt(parts[0]);
+          const minutes = parseInt(parts[1]);
+          const secParts = parts[2].split(',');
+          const seconds = parseInt(secParts[0]);
+          const milliseconds = parseInt(secParts[1]);
+          return hours * 3600 + minutes * 60 + seconds + milliseconds / 1000;
+        };
+
+        return {
+          start: seg.timestamps?.from ? parseTime(seg.timestamps.from) : (seg.offsets?.from / 1000 || 0),
+          end: seg.timestamps?.to ? parseTime(seg.timestamps.to) : (seg.offsets?.to / 1000 || 0),
+          text: seg.text?.trim() || '',
+        };
+      }) || [];
 
       // Calculate duration from last segment
       const duration = segments.length > 0 ? segments[segments.length - 1].end : 0;
 
       return {
         duration,
-        language: this.language,
+        language: result.result?.language || this.language,
         segments,
       };
     } catch (error) {

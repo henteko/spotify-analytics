@@ -13,7 +13,14 @@ Spotify Podcast Analytics CLI & Library - Spotify Podcast APIからアナリテ�
 ## インストール
 
 ```bash
+# 依存関係のインストール
 npm install
+
+# whisper.cppのセットアップ（analyze-dropoutコマンドを使用する場合）
+# 注意: cmakeが必要です
+#   macOS: brew install cmake
+#   Ubuntu/Debian: sudo apt-get install cmake
+npm run setup:whisper
 ```
 
 ## セットアップ
@@ -301,13 +308,11 @@ npm run dev -- export-all \
 **セットアップ（初回のみ）:**
 
 ```bash
-# whisper.cppをインストール
-git clone https://github.com/ggerganov/whisper.cpp
-cd whisper.cpp
-make
+# whisper.cppのセットアップ（サブモジュール初期化、ビルド、モデルダウンロード）
+npm run setup:whisper
 
-# モデルダウンロード（baseモデル推奨）
-bash ./models/download-ggml-model.sh base
+# 別のモデルを使用する場合（オプション）
+npm run setup:whisper -- small  # small, medium, large など
 ```
 
 **使用例:**
@@ -354,7 +359,7 @@ npm run dev -- analyze-dropout \
 - `--audio <path>` (必須): 音声ファイルパス（mp3, wav, m4a等）
 - `--segment-duration <seconds>`: セグメント長（秒、デフォルト: `60`）
 - `--language <lang>`: 音声言語（デフォルト: `ja`）
-- `--model-path <path>`: Whisperモデルファイルのパス（デフォルト: `models/ggml-base.bin`）
+- `--model-path <path>`: Whisperモデルファイルのパス（デフォルト: `whisper.cpp/models/ggml-base.bin`）
 - `-f, --format <format>`: 出力形式 (`csv` または `json`、デフォルト: `csv`)
 
 **出力例（CSV）:**

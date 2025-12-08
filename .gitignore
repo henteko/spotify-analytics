@@ -40,3 +40,9 @@ output/
 *.json
 !package.json
 !tsconfig.json
+
+# Whisper.cpp build artifacts
+whisper.cpp/build/
+whisper.cpp/models/*.bin
+whisper.cpp/main
+whisper.cpp/*.o
