@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ja" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Episode Health Report - 【初心者向け】プログラミング学習の始め方</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @media print {
+      .no-print { display: none; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+  
+  <div class="border-b border-gray-200 bg-white sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Episode Health Report - 【初心者向け】プログラミング学習の始め方</h1>
+          <p class="text-sm text-gray-500 mt-1">Episode Health Report</p>
+        </div>
+        <button onclick="window.print()" class="no-print px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+          Export PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <div class="mb-8">
+      <h2 class="text-2xl font-bold mb-4 text-gray-900">Health Score Dashboard</h2>
+
+      <!-- Main Score Card -->
+      <div class="bg-white rounded-lg shadow-lg p-8 border border-gray-200 mb-6">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-600 mb-2">Episode Health Score</h3>
+            <div class="flex items-center gap-3">
+              <span class="text-6xl font-bold text-gray-900">35</span>
+              <span class="text-2xl text-gray-500">/100</span>
+            </div>
+            <div class="mt-3 flex items-center gap-2">
+              <span class="text-3xl">🔴</span>
+              <span class="text-xl font-semibold text-red-600">Critical</span>
+            </div>
+          </div>
+          <div class="w-64 h-64">
+            <canvas id="healthScoreGauge"></canvas>
+          </div>
+        </div>
+
+        <!-- Score Breakdown -->
+        <div class="grid grid-cols-3 gap-4 pt-6 border-t border-gray-200">
+          <div class="text-center">
+            <p class="text-sm font-medium text-gray-600 mb-2">Playback Rate</p>
+            <p class="text-3xl font-bold text-gray-900">10</p>
+            <p class="text-sm text-gray-400">out of 40</p>
+          </div>
+          <div class="text-center">
+            <p class="text-sm font-medium text-gray-600 mb-2">Dropout Rate</p>
+            <p class="text-3xl font-bold text-gray-900">12</p>
+            <p class="text-sm text-gray-400">out of 30</p>
+          </div>
+          <div class="text-center">
+            <p class="text-sm font-medium text-gray-600 mb-2">Engagement</p>
+            <p class="text-3xl font-bold text-gray-900">13</p>
+            <p class="text-sm text-gray-400">out of 30</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        
+        <div class="bg-white rounded-lg shadow p-4 border border-gray-200">
+          <p class="text-xs font-medium text-gray-600 uppercase mb-2">Episode Name</p>
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">🎙️</span>
+            <p class="text-lg font-bold text-gray-900 truncate" title="【初心者向け】プログラミング学習の始め方">【初心者向け】プログラミング学習の始め方</p>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4 border border-gray-200">
+          <p class="text-xs font-medium text-gray-600 uppercase mb-2">Total Streams</p>
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">📊</span>
+            <p class="text-lg font-bold text-gray-900 truncate" title="890">890</p>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4 border border-gray-200">
+          <p class="text-xs font-medium text-gray-600 uppercase mb-2">Total Listeners</p>
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">👥</span>
+            <p class="text-lg font-bold text-gray-900 truncate" title="623">623</p>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4 border border-gray-200">
+          <p class="text-xs font-medium text-gray-600 uppercase mb-2">Playback Rate</p>
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">▶️</span>
+            <p class="text-lg font-bold text-gray-900 truncate" title="28.7%">28.7%</p>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4 border border-gray-200">
+          <p class="text-xs font-medium text-gray-600 uppercase mb-2">Dropout Rate</p>
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">📉</span>
+            <p class="text-lg font-bold text-gray-900 truncate" title="71.3%">71.3%</p>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4 border border-gray-200">
+          <p class="text-xs font-medium text-gray-600 uppercase mb-2">Engagement</p>
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">💡</span>
+            <p class="text-lg font-bold text-gray-900 truncate" title="0.038">0.038</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="mb-8 bg-white rounded-lg shadow-lg p-6 border border-gray-200 border-l-4 border-l-blue-500">
+      <div class="flex items-start gap-3 mb-4">
+        <div class="bg-blue-100 dark:bg-blue-900 rounded-lg p-3">
+          <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h2 class="text-2xl font-bold text-gray-900 mb-1">AI Analysis Summary</h2>
+          <p class="text-sm text-gray-600">Generated by Gemini AI</p>
+        </div>
+      </div>
+
+      <!-- Overview -->
+      <div class="mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Overview</h3>
+        <p class="text-gray-700 leading-relaxed">このエピソード「【初心者向け】プログラミング学習の始め方」は、3つの指標全てで深刻な問題を抱えています。再生率28.7%は基準を大幅に下回り、平均離脱率71.3%は非常に高い状態です。最も深刻なのは、フォロワーが287人も増加しているにも関わらず、再生数が890と極端に低いことです。これは、タイトルやテーマが既存フォロワーの期待と完全に乖離していることを示しています。早急な対策が必要です。</p>
+      </div>
+
+      <!-- Draft.md Metrics Assessment -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        <div class="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
+          <h4 class="text-sm font-semibold text-blue-800 mb-2">📊 Metric 1: Playback Rate</h4>
+          <p class="text-sm text-gray-700">指標1（再生率）: 平均再生率28.7%は基準の50%を大きく下回り、緊急対応が必要です。イントロの56.3%は比較的良好ですが、本編開始8分で82.5%が離脱するという異常な状況です。「初心者向け」と謳いながら、実際の内容が初心者の期待に応えていない、または難しすぎる可能性が極めて高いです。タイトルと内容の不一致が最大の原因と考えられます。</p>
+        </div>
+        <div class="bg-amber-50 rounded-lg p-4 border-l-4 border-amber-500">
+          <h4 class="text-sm font-semibold text-amber-800 mb-2">📉 Metric 2: Dropout Points</h4>
+          <p class="text-sm text-gray-700">指標2（離脱ポイント）: 平均離脱率71.3%は極めて深刻で、8分地点での82.5%離脱は異常です。全てのトピックで離脱率が43%以上という状況は、コンテンツの根本的な問題を示しています。特に「問題・課題」(78.9%)で大量離脱が発生しており、初心者が求めている「解決策」ではなく「問題点の列挙」になっている可能性があります。</p>
+        </div>
+        <div class="bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
+          <h4 class="text-sm font-semibold text-green-800 mb-2">💡 Metric 3: Engagement</h4>
+          <p class="text-sm text-gray-700">指標3（エンゲージメント）: これが最も深刻です。フォロワー287人増加（これ自体は良い）に対して、再生数890、エンゲージメント率0.038は異常に低い数値です。これは、このエピソードが既存フォロワーの興味と完全に合っていないことを示しています。タイトルに惹かれて来た新規視聴者も、内容が期待と異なるため即座に離脱していると考えられます。</p>
+        </div>
+      </div>
+
+      <!-- Priority Actions -->
+      <div class="mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          <svg class="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          Priority Actions
+        </h3>
+        <ul class="space-y-2">
+          
+            <li class="flex items-start gap-2 text-gray-700">
+              <span class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</span>
+              <span>タイトルと内容の完全な見直し。「初心者向け」なら、本当に初心者が最初に知りたい「環境構築」「最初のコード」など超具体的な内容に絞る</span>
+            </li>
+          
+            <li class="flex items-start gap-2 text-gray-700">
+              <span class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</span>
+              <span>エピソード全体を10-15分に短縮し、1つの具体的なトピック（例：「5分でPythonを動かす」）に集中する</span>
+            </li>
+          
+            <li class="flex items-start gap-2 text-gray-700">
+              <span class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</span>
+              <span>既存フォロワーの属性を分析し、彼らが求めているコンテンツとのギャップを埋める。または、新しいターゲット層を狙う場合は、それに合わせたマーケティングを行う</span>
+            </li>
+          
+        </ul>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Success Factors -->
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Success Factors
+          </h3>
+          <ul class="space-y-2">
+            
+              <li class="flex items-start gap-2 text-gray-700">
+                <span class="text-green-500 mt-1">✓</span>
+                <span>タイトルは新規フォロワーを287人も獲得できるだけの訴求力がある（ただし内容とのミスマッチが問題）</span>
+              </li>
+            
+          </ul>
+        </div>
+
+        <!-- Improvement Areas -->
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Improvement Areas
+          </h3>
+          <ul class="space-y-2">
+            
+              <li class="flex items-start gap-2 text-gray-700">
+                <span class="text-red-500 mt-1">⚠</span>
+                <span>タイトルと内容の深刻な乖離。「初心者向け」というラベルと実際の内容が合っていない</span>
+              </li>
+            
+              <li class="flex items-start gap-2 text-gray-700">
+                <span class="text-red-500 mt-1">⚠</span>
+                <span>内容が抽象的で、初心者が求めている具体的な「次の一歩」を提供できていない</span>
+              </li>
+            
+              <li class="flex items-start gap-2 text-gray-700">
+                <span class="text-red-500 mt-1">⚠</span>
+                <span>既存フォロワーの期待を完全に無視した内容になっている</span>
+              </li>
+            
+              <li class="flex items-start gap-2 text-gray-700">
+                <span class="text-red-500 mt-1">⚠</span>
+                <span>8分という早い段階で大量離脱が発生する構成上の問題</span>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+
+      <!-- Next Episode Suggestions -->
+      
+      <div class="mt-6 pt-6 border-t border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+          Next Episode Suggestions
+        </h3>
+        <ul class="space-y-2">
+          
+            <li class="flex items-start gap-2 text-gray-700">
+              <span class="text-blue-500 mt-1">→</span>
+              <span>次回は「【3分で完了】Pythonのインストールと最初のHello World」のような、超具体的で短いエピソードにする</span>
+            </li>
+          
+            <li class="flex items-start gap-2 text-gray-700">
+              <span class="text-blue-500 mt-1">→</span>
+              <span>既存フォロワーの属性を調査し、彼らが本当に求めているコンテンツを提供する。初心者向けではなく中級者向けかもしれない</span>
+            </li>
+          
+        </ul>
+      </div>
+      
+    </div>
+    
+    <div class="mb-8">
+      <div class="border-b border-gray-200 mb-6">
+        <nav class="flex space-x-8">
+          <button onclick="showTab('playback')" class="tab-button py-4 px-1 border-b-2 font-medium text-sm border-primary-600 text-primary-600">
+            Playback Rate
+          </button>
+          <button onclick="showTab('dropout')" class="tab-button py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700">
+            Dropout Analysis
+          </button>
+          <button onclick="showTab('engagement')" class="tab-button py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700">
+            Engagement
+          </button>
+          <button onclick="showTab('actions')" class="tab-button py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700">
+            Action Items
+          </button>
+        </nav>
+      </div>
+
+      <!-- Tab Content -->
+      <div id="playback-tab" class="tab-content">
+        
+      <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+        <h3 class="text-xl font-bold mb-4 text-gray-900">Playback Rate Analysis (Metric 1)</h3>
+
+        <div class="mb-6">
+          <p class="text-sm text-gray-600 mb-2">Overall Playback Rate</p>
+          <div class="flex items-center gap-3">
+            <span class="text-4xl font-bold text-gray-900">28.7%</span>
+            <span class="text-2xl">🔴</span>
+            <span class="text-lg font-semibold text-gray-700">needs-improvement</span>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <h4 class="text-lg font-semibold mb-3 text-gray-900">Time Segment Retention</h4>
+          <div class="grid grid-cols-4 gap-4">
+            <div class="text-center p-4 bg-gray-50 rounded-lg">
+              <p class="text-sm text-gray-600 mb-1">Intro (0-5min)</p>
+              <p class="text-2xl font-bold text-gray-900">56.3%</p>
+            </div>
+            <div class="text-center p-4 bg-gray-50 rounded-lg">
+              <p class="text-sm text-gray-600 mb-1">Early (5-15min)</p>
+              <p class="text-2xl font-bold text-gray-900">38.2%</p>
+            </div>
+            <div class="text-center p-4 bg-gray-50 rounded-lg">
+              <p class="text-sm text-gray-600 mb-1">Mid (15-30min)</p>
+              <p class="text-2xl font-bold text-gray-900">15.4%</p>
+            </div>
+            <div class="text-center p-4 bg-gray-50 rounded-lg">
+              <p class="text-sm text-gray-600 mb-1">Late (30min+)</p>
+              <p class="text-2xl font-bold text-gray-900">4.8%</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <canvas id="playbackRateChart" height="80"></canvas>
+        </div>
+      </div>
+      </div>
+
+      <div id="dropout-tab" class="tab-content hidden">
+        
+      <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+        <h3 class="text-xl font-bold mb-4 text-gray-900">Dropout Analysis (Metric 2)</h3>
+
+        <div class="grid grid-cols-2 gap-6 mb-6">
+          <div>
+            <p class="text-sm text-gray-600 mb-2">Average Dropout Rate</p>
+            <p class="text-4xl font-bold text-gray-900">71.3%</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600 mb-2">Pattern</p>
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">🔴</span>
+              <span class="text-xl font-semibold text-gray-900">problematic</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-6 p-4 bg-red-50 rounded-lg border border-red-500">
+          <p class="text-sm font-semibold text-red-800 mb-2">Max Dropout Point</p>
+          <p class="text-red-900">
+            <strong>Timestamp:</strong> 8m 0s
+            &nbsp;|&nbsp;
+            <strong>Rate:</strong> 82.5%
+          </p>
+        </div>
+
+        
+        <div class="mb-6">
+          <h4 class="text-lg font-semibold mb-3 text-gray-900">Topic Analysis</h4>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="p-4 bg-green-50 rounded-lg border border-green-500">
+              <p class="text-sm font-semibold text-green-800 mb-2">✅ High Interest Topics (Dropout < 30%)</p>
+              <p class="text-sm text-green-900">
+                なし
+              </p>
+            </div>
+            <div class="p-4 bg-red-50 rounded-lg border border-red-500">
+              <p class="text-sm font-semibold text-red-800 mb-2">⚠️ Low Interest Topics (Dropout > 50%)</p>
+              <p class="text-sm text-red-900">
+                問題・課題, 改善・解決, ツール・環境
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <p class="text-sm font-medium text-gray-600 mb-3">Dropout Rate by Topic</p>
+            <div class="space-y-2">
+              
+                <div class="flex items-center gap-3">
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-sm text-gray-700">紹介・説明</span>
+                      <span class="text-sm font-semibold text-gray-700">43.7%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div class="bg-amber-500 h-2 rounded-full" style="width: 43.7%"></div>
+                    </div>
+                  </div>
+                </div>
+              
+                <div class="flex items-center gap-3">
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-sm text-gray-700">問題・課題</span>
+                      <span class="text-sm font-semibold text-gray-700">78.9%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div class="bg-red-500 h-2 rounded-full" style="width: 78.9%"></div>
+                    </div>
+                  </div>
+                </div>
+              
+                <div class="flex items-center gap-3">
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-sm text-gray-700">改善・解決</span>
+                      <span class="text-sm font-semibold text-gray-700">65.2%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div class="bg-red-500 h-2 rounded-full" style="width: 65.2%"></div>
+                    </div>
+                  </div>
+                </div>
+              
+                <div class="flex items-center gap-3">
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-sm text-gray-700">ツール・環境</span>
+                      <span class="text-sm font-semibold text-gray-700">71.4%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div class="bg-red-500 h-2 rounded-full" style="width: 71.4%"></div>
+                    </div>
+                  </div>
+                </div>
+              
+            </div>
+          </div>
+        </div>
+        
+      </div>
+      </div>
+
+      <div id="engagement-tab" class="tab-content hidden">
+        
+      <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+        <h3 class="text-xl font-bold mb-4 text-gray-900">Engagement Analysis (Metric 3)</h3>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="p-4 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600 mb-1">Follower Growth</p>
+            <p class="text-2xl font-bold text-gray-900">+287</p>
+          </div>
+          <div class="p-4 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600 mb-1">Total Streams</p>
+            <p class="text-2xl font-bold text-gray-900">890</p>
+          </div>
+          <div class="p-4 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600 mb-1">Total Listeners</p>
+            <p class="text-2xl font-bold text-gray-900">623</p>
+          </div>
+          <div class="p-4 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600 mb-1">Engagement Rate</p>
+            <p class="text-2xl font-bold text-gray-900">0.038</p>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div id="actions-tab" class="tab-content hidden">
+        
+      <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+        <h3 class="text-xl font-bold mb-6 text-gray-900">Action Items</h3>
+
+        
+        <div class="mb-6">
+          <h4 class="text-lg font-semibold mb-3 text-gray-900 flex items-center gap-2">
+            <span>🔴</span>
+            Critical
+          </h4>
+          <div class="space-y-3">
+            
+              <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-red-500">
+                <p class="font-semibold text-gray-900 mb-2">再生率28.7%は基準（50%）を大幅に下回り、8分地点で82.5%が離脱している</p>
+                <p class="text-sm text-gray-700 mb-2"><strong>Action:</strong> タイトルと内容が一致していない可能性が高い。「初心者向け」と謳いながら、実際の内容が難しすぎる、または期待と異なる内容になっていないか確認し、全面的に見直す</p>
+                <p class="text-sm text-gray-600"><strong>Expected Impact:</strong> 再生率が15-25%向上し、ターゲットオーディエンスに適切にリーチできます</p>
+              </div>
+            
+              <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-red-500">
+                <p class="font-semibold text-gray-900 mb-2">フォロワーが287人増加しているのに、再生数が890と極端に低い</p>
+                <p class="text-sm text-gray-700 mb-2"><strong>Action:</strong> タイトル、サムネイル、エピソード説明を大幅に見直し。既存フォロワーが「これは自分向けではない」と判断している可能性が高い。ターゲットオーディエンスの再定義が必要</p>
+                <p class="text-sm text-gray-600"><strong>Expected Impact:</strong> エンゲージメント率が3-5倍に向上し、フォロワーが実際に視聴するようになります</p>
+              </div>
+            
+              <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-red-500">
+                <p class="font-semibold text-gray-900 mb-2">全てのトピックで離脱率が43%以上と非常に高い</p>
+                <p class="text-sm text-gray-700 mb-2"><strong>Action:</strong> 内容が初心者向けと謳いながら難しすぎる、または退屈すぎる可能性。初心者が本当に知りたい「最初の一歩」に焦点を絞り、より具体的で実践的な内容に変更</p>
+                <p class="text-sm text-gray-600"><strong>Expected Impact:</strong> 離脱率が30-40%改善し、ターゲット層に響く内容になります</p>
+              </div>
+            
+          </div>
+        </div>
+        
+        <div class="mb-6">
+          <h4 class="text-lg font-semibold mb-3 text-gray-900 flex items-center gap-2">
+            <span>🟡</span>
+            High Priority
+          </h4>
+          <div class="space-y-3">
+            
+              <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-amber-500">
+                <p class="font-semibold text-gray-900 mb-2">イントロは56.3%と比較的良好だが、本編で急激に低下</p>
+                <p class="text-sm text-gray-700 mb-2"><strong>Action:</strong> イントロで約束している内容と本編の内容が乖離している可能性。イントロを見直すか、本編を約束通りの内容に変更</p>
+                <p class="text-sm text-gray-600"><strong>Expected Impact:</strong> 前半の離脱率が20-30%改善します</p>
+              </div>
+            
+          </div>
+        </div>
+        
+        
+        <div class="mb-6">
+          <h4 class="text-lg font-semibold mb-3 text-gray-900 flex items-center gap-2">
+            <span>📅</span>
+            Future Episodes
+          </h4>
+          <div class="space-y-3">
+            
+              <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
+                <p class="font-semibold text-gray-900 mb-2">「初心者向け」というターゲティングが機能していない</p>
+                <p class="text-sm text-gray-700 mb-2"><strong>Action:</strong> 次回から、より明確で具体的なターゲット設定（例：「5分でわかる！初めてのPython」）にする</p>
+                <p class="text-sm text-gray-600"><strong>Expected Impact:</strong> 適切なオーディエンスにリーチし、満足度が向上します</p>
+              </div>
+            
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <script>
+      function showTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => {
+          tab.classList.add('hidden');
+        });
+
+        // Remove active state from all buttons
+        document.querySelectorAll('.tab-button').forEach(btn => {
+          btn.classList.remove('border-primary-600', 'text-primary-600');
+          btn.classList.add('border-transparent');
+        });
+
+        // Show selected tab
+        document.getElementById(tabName + '-tab').classList.remove('hidden');
+
+        // Set active button
+        event.target.classList.remove('border-transparent');
+        event.target.classList.add('border-primary-600', 'text-primary-600');
+      }
+    </script>
+    
+    <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+      <p class="text-sm text-gray-600">
+        Generated by Spotify Analytics - Episode Health Report Tool
+      </p>
+      <p class="text-xs text-gray-500 mt-1">
+        Report Date: 2025/12/8 20:48:07 | Episode: 【初心者向け】プログラミング学習の始め方
+      </p>
+    </div>
+  </div>
+
+  
+  <script>
+    // Health Score Gauge
+    const gaugeCtx = document.getElementById('healthScoreGauge').getContext('2d');
+    new Chart(gaugeCtx, {
+      type: 'doughnut',
+      data: {
+        datasets: [{
+          data: [35, 65],
+          backgroundColor: [
+            '#ef4444',
+            '#e5e7eb'
+          ],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        circumference: 180,
+        rotation: -90,
+        cutout: '75%',
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        }
+      }
+    });
+
+    // Playback Rate Chart
+    const playbackCtx = document.getElementById('playbackRateChart').getContext('2d');
+    new Chart(playbackCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Intro (0-5min)', 'Early (5-15min)', 'Mid (15-30min)', 'Late (30min+)'],
+        datasets: [{
+          label: 'Retention Rate (%)',
+          data: [
+            56.3,
+            38.2,
+            15.4,
+            4.8
+          ],
+          backgroundColor: '#3b82f6',
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              callback: function(value) {
+                return value + '%';
+              }
+            }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

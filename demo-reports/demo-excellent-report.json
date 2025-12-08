@@ -1,0 +1,142 @@
+{
+  "episode": {
+    "id": "demo-excellent-001",
+    "name": "TypeScriptの型システム完全ガイド - 実践テクニック集",
+    "releaseDate": "2024-11-15T00:00:00.000Z",
+    "duration": 2400,
+    "totalStreams": 15420,
+    "totalListeners": 8930,
+    "averageListenTime": 2160
+  },
+  "healthScore": {
+    "total": 95,
+    "level": "excellent",
+    "breakdown": {
+      "playbackRate": 40,
+      "dropoutRate": 30,
+      "engagement": 25
+    }
+  },
+  "playbackRateAnalysis": {
+    "overallRate": 87.5,
+    "evaluation": "excellent",
+    "byTimeSegment": {
+      "intro": 94.2,
+      "earlyMain": 91.8,
+      "midMain": 86.3,
+      "lateMain": 82.1
+    }
+  },
+  "dropoutAnalysis": {
+    "averageDropoutRate": 12.5,
+    "maxDropoutPoint": {
+      "timestamp": 2100,
+      "rate": 18.2
+    },
+    "pattern": "excellent",
+    "topicAnalysis": {
+      "topics": [
+        {
+          "name": "技術・開発",
+          "dropoutRate": 8.5
+        },
+        {
+          "name": "機能・特徴",
+          "dropoutRate": 11.2
+        },
+        {
+          "name": "紹介・説明",
+          "dropoutRate": 15.8
+        },
+        {
+          "name": "改善・解決",
+          "dropoutRate": 9.7
+        }
+      ],
+      "highInterest": [
+        "技術・開発",
+        "改善・解決",
+        "機能・特徴"
+      ],
+      "lowInterest": []
+    }
+  },
+  "engagementAnalysis": {
+    "followerGrowthAroundRelease": 234,
+    "totalStreams": 15420,
+    "totalListeners": 8930,
+    "engagementRate": 0.352,
+    "evaluation": "excellent"
+  },
+  "demographics": {
+    "age": {
+      "18-24": 1245,
+      "25-34": 3890,
+      "35-44": 2456,
+      "45-54": 1123,
+      "55+": 216
+    },
+    "gender": {
+      "male": 6234,
+      "female": 2456,
+      "other": 240
+    },
+    "country": {
+      "JP": 7234,
+      "US": 856,
+      "UK": 345,
+      "DE": 234,
+      "FR": 201
+    }
+  },
+  "actionItems": {
+    "critical": [],
+    "high": [],
+    "recommended": [
+      {
+        "priority": "recommended",
+        "issue": "後半部分の視聴維持率をさらに向上させる余地がある",
+        "action": "後半により具体的なコード例やデモを追加し、リスナーの興味を最後まで維持する",
+        "expectedImpact": "完走率が5-8%向上し、リスナー満足度がさらに高まります"
+      },
+      {
+        "priority": "recommended",
+        "issue": "現在の高いエンゲージメントを維持しながら、さらなる成長を目指す",
+        "action": "SNSでのハイライトクリップ共有や、リスナーからの質問を次回エピソードで取り上げる",
+        "expectedImpact": "コミュニティの活性化とフォロワー増加率の向上"
+      }
+    ],
+    "futureEpisodes": [
+      {
+        "priority": "recommended",
+        "issue": "このエピソードの成功パターンを他のエピソードでも再現",
+        "action": "技術的な深掘りと実践的な例を組み合わせる構成を継続する",
+        "expectedImpact": "安定した高品質コンテンツの提供が可能になります"
+      }
+    ]
+  },
+  "aiInsights": {
+    "overview": "このエピソード「TypeScriptの型システム完全ガイド」は、3つの指標全てにおいて優秀な成績を収めています。再生率87.5%は基準を大きく上回り、離脱率も12.5%と非常に低く抑えられています。特に技術的な内容にも関わらず、リスナーの興味を最後まで維持できている点が素晴らしいです。エンゲージメント率0.352も優秀で、フォロワーが実際に視聴している健全な状態です。",
+    "playbackRateAssessment": "指標1（再生率）: 平均再生率87.5%は80%の基準を大きく上回る優秀な数値です。イントロから前半にかけて94.2%→91.8%と高い維持率を保ち、後半も82.1%と基準以上を維持しています。技術的な内容でありながら、分かりやすい説明と具体例により、リスナーの興味を引き続けることに成功しています。",
+    "dropoutAssessment": "指標2（離脱ポイント）: 平均離脱率12.5%は20%以下の優秀な基準を満たしています。最大離脱ポイントも35分地点で18.2%と許容範囲内です。トピック別では「技術・開発」(8.5%)と「改善・解決」(9.7%)が特に低い離脱率を示しており、実践的な内容への関心の高さが伺えます。終盤まで視聴者を引き付ける構成が功を奏しています。",
+    "engagementAssessment": "指標3（エンゲージメント）: エンゲージメント率0.352は非常に高く、フォロワー234人の増加も健全な成長を示しています。総再生数15,420、総リスナー数8,930という数値は、フォロワーが実際にコンテンツを視聴し、さらに口コミで広がっている証拠です。このエピソードはフォロワー獲得と再生数のバランスが理想的な状態です。",
+    "priorityActions": [
+      "後半35分以降のセグメントに、より多くの実践的なコード例やデモを追加し、視聴維持率をさらに向上させる",
+      "このエピソードの成功要因（技術的深掘り + 実践例）を分析し、テンプレート化して他のエピソードにも適用する",
+      "リスナーからのフィードバックを積極的に収集し、次回以降のトピック選定に活かす"
+    ],
+    "successFactors": [
+      "技術的な内容を分かりやすく説明し、かつ実践的な例を豊富に含めている点",
+      "イントロから本編への流れがスムーズで、リスナーの興味を最初から引き付けている",
+      "トピックの選定が適切で、ターゲットオーディエンスのニーズに合致している",
+      "適切な長さ（40分）で、内容の濃さと視聴しやすさのバランスが取れている"
+    ],
+    "improvementAreas": [
+      "後半部分の視聴維持率がやや下がる傾向があるため、構成の見直しを検討"
+    ],
+    "nextEpisodeSuggestions": [
+      "今回の型システムの続編として「実践TypeScript - 大規模プロジェクトでの型活用術」を企画する",
+      "リスナーからの質問や要望を取り入れた Q&A 形式のエピソードを追加する"
+    ]
+  }
+}

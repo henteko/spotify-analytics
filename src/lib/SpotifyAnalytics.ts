@@ -329,8 +329,8 @@ export class SpotifyAnalytics {
   /**
    * Get episode performance data
    */
-  async getPerformance(episodeId: string): Promise<PerformanceData> {
-    const connector = this.getConnector(this.defaultPodcastId);
+  async getPerformance(episodeId: string, podcastId?: string): Promise<PerformanceData> {
+    const connector = this.getConnector(podcastId || this.defaultPodcastId);
     const response = await connector.performance(episodeId);
 
     // Get episode metadata for name

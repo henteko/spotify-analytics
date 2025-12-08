@@ -555,5 +555,91 @@ program
     }
   });
 
+// Episode report command
+program
+  .command('episode-report')
+  .description('Generate comprehensive health report for a single episode')
+  .requiredOption('--podcast-id <id>', 'Podcast ID')
+  .requiredOption('--episode-id <id>', 'Episode ID')
+  .option('--audio <path>', 'Audio file path for detailed dropout analysis (optional)')
+  .option('--output-dir <dir>', 'Output directory', './reports')
+  .option('--theme <theme>', 'Theme (light/dark)', 'light')
+  .action(async (options) => {
+    const logger = new Logger(program.opts().verbose, program.opts().quiet);
+
+    try {
+      await loadEnv(program.opts().config);
+      const credentials = getCredentials();
+
+      if (!credentials) {
+        logger.error('No credentials found. Run "spotify-analytics init" first or set SPOTIFY_SP_DC and SPOTIFY_SP_KEY environment variables.');
+        process.exit(2);
+      }
+
+      logger.info('🏥 Episode Health Report Generator');
+      logger.info('====================================');
+
+      const analytics = new SpotifyAnalytics({ credentials });
+
+      // Step 1: Generate health report
+      logger.info('Step 1: Collecting episode data...');
+      const { EpisodeHealthReportGenerator } = await import('../lib/EpisodeHealthReportGenerator');
+      const generator = new EpisodeHealthReportGenerator(analytics);
+
+      const report = await generator.generate({
+        podcastId: options.podcastId,
+        episodeId: options.episodeId,
+        audioFilePath: options.audio,
+      });
+
+      logger.info('✅ Health report generated successfully!');
+      logger.info(`   Health Score: ${report.healthScore.total}/100 (${report.healthScore.level})`);
+      logger.info(`   Playback Rate: ${report.playbackRateAnalysis.overallRate}%`);
+      logger.info(`   Dropout Rate: ${report.dropoutAnalysis.averageDropoutRate}%`);
+      logger.info(`   Engagement Rate: ${report.engagementAnalysis.engagementRate.toFixed(3)}`);
+
+      // Step 2: Generate HTML visualization
+      logger.info('Step 2: Generating HTML report...');
+      const { promises: fs } = await import('fs');
+      await fs.mkdir(options.outputDir, { recursive: true });
+
+      const { EpisodeHealthReportVisualizer } = await import('../lib/EpisodeHealthReportVisualizer');
+      const visualizer = new EpisodeHealthReportVisualizer();
+
+      const date = new Date().toISOString().split('T')[0];
+      const htmlPath = `${options.outputDir}/episode-report-${options.episodeId}-${date}.html`;
+
+      visualizer.generateHTML(report, {
+        outputPath: htmlPath,
+        title: `Episode Health Report - ${report.episode.name}`,
+        theme: options.theme as 'light' | 'dark',
+      });
+
+      logger.info(`✅ HTML report saved to: ${htmlPath}`);
+
+      // Step 3: Optionally save JSON data
+      const jsonPath = `${options.outputDir}/episode-report-${options.episodeId}-${date}.json`;
+      await fs.writeFile(jsonPath, JSON.stringify(report, null, 2));
+      logger.info(`✅ JSON data saved to: ${jsonPath}`);
+
+      // Summary
+      logger.info('');
+      logger.info('📊 Summary:');
+      logger.info(`   Episode: ${report.episode.name}`);
+      logger.info(`   Health Score: ${report.healthScore.total}/100 (${report.healthScore.level})`);
+      logger.info(`   Critical Actions: ${report.actionItems.critical.length}`);
+      logger.info(`   High Priority Actions: ${report.actionItems.high.length}`);
+      logger.info(`   Recommended Actions: ${report.actionItems.recommended.length}`);
+      logger.info('');
+      logger.info('🎉 Report generation complete! Open the HTML file in your browser to view the full analysis.');
+    } catch (error) {
+      logger.error(`Failed to generate episode report: ${(error as Error).message}`);
+      if (program.opts().verbose) {
+        console.error(error);
+      }
+      process.exit(1);
+    }
+  });
+
 // Parse arguments
 program.parse();
