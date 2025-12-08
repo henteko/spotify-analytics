@@ -295,6 +295,88 @@ npm run dev -- export-all \
 - `--output-dir <dir>`: 出力ディレクトリ (デフォルト: `./output`)
 - `-f, --format <format>`: 出力形式 (`csv`, `json`, または `both`、デフォルト: `csv`)
 
+### `analyze-dropout`
+音声データとパフォーマンスデータを組み合わせて、どの話題でリスナーが離脱しているかを分析します。
+
+**セットアップ（初回のみ）:**
+
+```bash
+# whisper.cppをインストール
+git clone https://github.com/ggerganov/whisper.cpp
+cd whisper.cpp
+make
+
+# モデルダウンロード（baseモデル推奨）
+bash ./models/download-ggml-model.sh base
+```
+
+**使用例:**
+
+```bash
+# 基本的な使用
+npm run dev -- analyze-dropout \
+  --podcast-id YOUR_ID \
+  --episode-id EPISODE_ID \
+  --audio ./audio/episode.mp3
+
+# JSON形式で詳細分析
+npm run dev -- analyze-dropout \
+  --podcast-id YOUR_ID \
+  --episode-id EPISODE_ID \
+  --audio ./audio/episode.mp3 \
+  -f json > dropout_analysis.json
+
+# セグメント長を30秒に変更
+npm run dev -- analyze-dropout \
+  --podcast-id YOUR_ID \
+  --episode-id EPISODE_ID \
+  --audio ./audio/episode.mp3 \
+  --segment-duration 30
+
+# 英語の音声を分析
+npm run dev -- analyze-dropout \
+  --podcast-id YOUR_ID \
+  --episode-id EPISODE_ID \
+  --audio ./audio/episode.mp3 \
+  --language en
+
+# カスタムモデルを指定（より高精度）
+npm run dev -- analyze-dropout \
+  --podcast-id YOUR_ID \
+  --episode-id EPISODE_ID \
+  --audio ./audio/episode.mp3 \
+  --model-path ./whisper.cpp/models/ggml-large.bin
+```
+
+**オプション:**
+- `--podcast-id <id>` (必須): ポッドキャストID
+- `--episode-id <id>` (必須): エピソードID
+- `--audio <path>` (必須): 音声ファイルパス（mp3, wav, m4a等）
+- `--segment-duration <seconds>`: セグメント長（秒、デフォルト: `60`）
+- `--language <lang>`: 音声言語（デフォルト: `ja`）
+- `--model-path <path>`: Whisperモデルファイルのパス（デフォルト: `models/ggml-base.bin`）
+- `-f, --format <format>`: 出力形式 (`csv` または `json`、デフォルト: `csv`)
+
+**出力例（CSV）:**
+```csv
+segment,startTime,endTime,startPercentage,endPercentage,topic,transcript,listenersStart,listenersEnd,dropoutCount,dropoutRate,retentionRate
+1,0,60,0.0,2.8,今日はVS Codeの拡張機能について...,今日はVS Codeの拡張機能について話します...,1000,950,50,5.0,95.0
+2,60,120,2.8,5.6,最初に紹介するのは...,最初に紹介するのはGitLensです...,950,920,30,3.2,96.8
+3,120,180,5.6,8.3,設定ファイルの詳細な説明...,設定ファイルの詳細な説明をします...,920,770,150,16.3,83.7
+```
+
+**モデルサイズの選択:**
+- `tiny`: 最速、低精度（75MB）
+- `base`: 推奨、バランス良好（142MB）
+- `small`: 高精度、やや遅い（466MB）
+- `medium`: より高精度（1.5GB）
+- `large`: 最高精度、最も遅い（2.9GB）
+
+**特徴:**
+- ✅ 完全無料（ローカル実行）
+- ✅ プライバシー保護（音声データが外部送信されない）
+- ✅ オフライン動作可能
+
 ## ライブラリAPI
 
 ### 主なクラス

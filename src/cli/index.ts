@@ -457,5 +457,67 @@ program
     }
   });
 
+// Analyze-dropout command
+program
+  .command('analyze-dropout')
+  .description('Analyze dropout patterns using audio and performance data')
+  .requiredOption('--podcast-id <id>', 'Podcast ID')
+  .requiredOption('--episode-id <id>', 'Episode ID')
+  .requiredOption('--audio <path>', 'Audio file path')
+  .option('--segment-duration <seconds>', 'Segment duration in seconds', '60')
+  .option('--language <lang>', 'Audio language', 'ja')
+  .option('--model-path <path>', 'Path to whisper model file')
+  .option('-f, --format <format>', 'Output format (csv/json)', 'csv')
+  .action(async (options) => {
+    const logger = new Logger(program.opts().verbose, program.opts().quiet);
+
+    try {
+      await loadEnv(program.opts().config);
+      const credentials = getCredentials();
+
+      if (!credentials) {
+        logger.error('No credentials found. Run "spotify-analytics init" first or set SPOTIFY_SP_DC and SPOTIFY_SP_KEY environment variables.');
+        process.exit(2);
+      }
+
+      const analytics = new SpotifyAnalytics({ credentials });
+      const { DropoutAnalyzer } = await import('../lib');
+
+      logger.info('Using whisper.cpp for local transcription');
+      logger.info('Make sure whisper.cpp is installed: https://github.com/ggerganov/whisper.cpp');
+
+      const analyzer = new DropoutAnalyzer(analytics);
+
+      logger.info(`Analyzing dropout for episode ${options.episodeId}...`);
+      logger.info('Step 1: Transcribing audio (this may take a few minutes)...');
+
+      const result = await analyzer.analyze({
+        podcastId: options.podcastId,
+        episodeId: options.episodeId,
+        audioFilePath: options.audio,
+        segmentDuration: parseInt(options.segmentDuration),
+        language: options.language,
+        modelPath: options.modelPath,
+      });
+
+      logger.info('Step 2: Calculating dropout rates...');
+      logger.info('Analysis complete!');
+
+      if (options.format === 'csv') {
+        const { CSVExporter } = await import('../exporters');
+        const exporter = new CSVExporter();
+        console.log(exporter.stringify(result.segments));
+      } else {
+        console.log(JSON.stringify(result, null, 2));
+      }
+    } catch (error) {
+      logger.error(`Failed to analyze dropout: ${(error as Error).message}`);
+      if (program.opts().verbose) {
+        console.error(error);
+      }
+      process.exit(1);
+    }
+  });
+
 // Parse arguments
 program.parse();
