@@ -457,6 +457,50 @@ program
     }
   });
 
+// Show command (get podcast details)
+program
+  .command('show')
+  .description('Get podcast (show) details')
+  .requiredOption('--podcast-id <id>', 'Podcast ID')
+  .option('-f, --format <format>', 'Output format (csv/json)', 'csv')
+  .option('--raw', 'Output raw API response')
+  .action(async (options) => {
+    const logger = new Logger(program.opts().verbose, program.opts().quiet);
+
+    try {
+      await loadEnv(program.opts().config);
+      const credentials = getCredentials();
+
+      if (!credentials) {
+        logger.error('No credentials found. Run "spotify-analytics init" first or set SPOTIFY_SP_DC and SPOTIFY_SP_KEY environment variables.');
+        process.exit(2);
+      }
+
+      const analytics = new SpotifyAnalytics({ credentials });
+      const connector = (analytics as any).getConnector(options.podcastId);
+
+      // Output raw API response if requested
+      if (options.raw) {
+        const rawResponse = await connector.metadata();
+        console.log(JSON.stringify(rawResponse, null, 2));
+        return;
+      }
+
+      const show = await analytics.getShow(options.podcastId);
+
+      if (options.format === 'csv') {
+        const { CSVExporter } = await import('../exporters');
+        const exporter = new CSVExporter();
+        console.log(exporter.stringify([show]));
+      } else {
+        console.log(JSON.stringify(show, null, 2));
+      }
+    } catch (error) {
+      logger.error(`Failed to get show: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
 
 // Parse arguments
 program.parse();

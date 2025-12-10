@@ -68,18 +68,34 @@ export class SpotifyAnalytics {
   }
 
   /**
-   * Get list of user's podcasts
+   * Get show (podcast) details
    */
-  async getCatalog(): Promise<Podcast[]> {
-    const connector = this.getConnector('dummy'); // Catalog doesn't need podcast ID
-    const response = await connector.catalog();
+  async getShow(podcastId?: string): Promise<Podcast> {
+    const connector = this.getConnector(podcastId);
+    const response = await connector.metadata();
 
-    return response.shows.map(show => ({
-      id: show.id,
-      name: show.name,
-      publisher: show.publisher || '',
-      coverArt: show.coverArt,
-    }));
+    // Check if response has show data in nested format
+    if (response.show) {
+      return {
+        id: response.show.id,
+        name: response.show.name,
+        publisher: response.show.publisher,
+        coverArt: response.show.coverArt,
+      };
+    }
+
+    // Handle direct format (when querying show metadata without episodeId)
+    const showData = response as any;
+    if (!showData.id || !showData.name) {
+      throw new Error('Show metadata not found in response');
+    }
+
+    return {
+      id: showData.id,
+      name: showData.name,
+      publisher: showData.publisher || '',
+      coverArt: showData.coverImage || showData.artworkUrl || '',
+    };
   }
 
   /**

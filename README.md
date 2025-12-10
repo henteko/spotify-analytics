@@ -93,6 +93,10 @@ const analytics = new SpotifyAnalytics({
   }
 });
 
+// ポッドキャストの詳細情報を取得
+const show = await analytics.getShow('YOUR_PODCAST_ID');
+console.log(show);
+
 // ストリーム数を取得
 const streams = await analytics.getStreams({
   podcastId: 'YOUR_PODCAST_ID',
@@ -141,6 +145,28 @@ npm run dev -- init
 ```bash
 npm run dev -- me
 ```
+
+### `show`
+ポッドキャスト（show）の詳細情報を取得します。
+
+```bash
+# CSV形式（デフォルト）
+npm run dev -- show --podcast-id YOUR_ID
+
+# JSON形式で出力
+npm run dev -- show --podcast-id YOUR_ID -f json
+
+# ファイルに保存
+npm run dev -- show --podcast-id YOUR_ID > show.csv
+
+# API生レスポンス出力
+npm run dev -- show --podcast-id YOUR_ID --raw
+```
+
+**オプション:**
+- `--podcast-id <id>` (必須): ポッドキャストID
+- `-f, --format <format>`: 出力形式 (`csv` または `json`、デフォルト: `csv`)
+- `--raw`: API生レスポンスを出力（デバッグ用）
 
 ### `episodes`
 エピソード一覧を取得します。
@@ -325,6 +351,7 @@ const analytics = new SpotifyAnalytics({
 #### 主なメソッド
 
 **データ取得:**
+- `getShow(podcastId?)`: ポッドキャスト詳細情報取得
 - `getEpisodes(options)`: エピソード一覧取得
 - `getStreams(options)`: ストリーム数取得
 - `getListeners(options)`: リスナー数取得
