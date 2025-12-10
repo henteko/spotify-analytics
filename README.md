@@ -12,6 +12,14 @@ Spotify Podcast Analytics CLI & Library - Spotify Podcast APIからアナリテ�
 
 ## インストール
 
+### npmから使用する場合
+
+```bash
+npm install @henteko/spotify-analytics
+```
+
+### 開発用（このリポジトリをクローンして使う場合）
+
 ```bash
 # 依存関係のインストール
 npm install
@@ -75,7 +83,7 @@ npm run dev -- streams --podcast-id YOUR_PODCAST_ID --start 2024-01-01 --raw
 ### ライブラリとして使用
 
 ```typescript
-import { SpotifyAnalytics } from './src';
+import { SpotifyAnalytics } from '@henteko/spotify-analytics';
 
 const analytics = new SpotifyAnalytics({
   credentials: {
@@ -303,7 +311,7 @@ npm run dev -- export-all \
 #### `SpotifyAnalytics` (高レベルAPI - 推奨)
 
 ```typescript
-import { SpotifyAnalytics } from 'spotify-analytics';
+import { SpotifyAnalytics } from '@henteko/spotify-analytics';
 
 const analytics = new SpotifyAnalytics({
   credentials: {
@@ -364,6 +372,55 @@ spotify-analytics/
 ├── .env.example                   # 環境変数のサンプル
 ├── internal-docs/                 # ドキュメント
 └── dist/                          # ビルド出力
+```
+
+## npmへの公開（メンテナ向け）
+
+このパッケージはGitHub Actionsを使って自動的にnpmに公開されます。
+
+### 公開手順
+
+#### 1. NPM_TOKENの設定（初回のみ）
+
+1. npmでアクセストークンを作成
+   - https://www.npmjs.com/settings/YOUR_USERNAME/tokens にアクセス
+   - "Generate New Token" → "Classic Token" を選択
+   - Token Type: "Automation" を選択
+   - トークンを生成してコピー
+
+2. GitHubリポジトリにSecretを追加
+   - https://github.com/henteko/spotify-analytics/settings/secrets/actions にアクセス
+   - "New repository secret" をクリック
+   - Name: `NPM_TOKEN`
+   - Secret: 上記でコピーしたトークンを貼り付け
+   - "Add secret" をクリック
+
+#### 2. バージョンアップして公開
+
+```bash
+# バージョンを上げる（patch/minor/majorのいずれか）
+npm version patch  # 1.0.0 → 1.0.1
+npm version minor  # 1.0.0 → 1.1.0
+npm version major  # 1.0.0 → 2.0.0
+
+# タグをプッシュ
+git push origin main --tags
+```
+
+GitHub Actionsが自動的に：
+- ビルドを実行
+- テストを実行
+- npmに公開
+
+公開状況は https://github.com/henteko/spotify-analytics/actions で確認できます。
+
+### 手動で公開する場合
+
+```bash
+npm login
+npm run build
+npm test
+npm publish
 ```
 
 ## トラブルシューティング
