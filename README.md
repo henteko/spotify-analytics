@@ -15,12 +15,6 @@ Spotify Podcast Analytics CLI & Library - Spotify Podcast APIからアナリテ�
 ```bash
 # 依存関係のインストール
 npm install
-
-# whisper.cppのセットアップ（analyze-dropoutコマンドを使用する場合）
-# 注意: cmakeが必要です
-#   macOS: brew install cmake
-#   Ubuntu/Debian: sudo apt-get install cmake
-npm run setup:whisper
 ```
 
 ## セットアップ
@@ -302,113 +296,6 @@ npm run dev -- export-all \
 - `--output-dir <dir>`: 出力ディレクトリ (デフォルト: `./output`)
 - `-f, --format <format>`: 出力形式 (`csv`, `json`, または `both`、デフォルト: `csv`)
 
-### `analyze-dropout`
-音声データとパフォーマンスデータを組み合わせて、インタラクティブなHTMLレポートを生成します。
-
-**セットアップ（初回のみ）:**
-
-```bash
-# whisper.cppのセットアップ（サブモジュール初期化、ビルド、モデルダウンロード）
-npm run setup:whisper
-
-# 別のモデルを使用する場合（オプション）
-npm run setup:whisper -- small  # small, medium, large など
-
-# AI分析機能を使用する場合（オプション）
-# .envファイルにGemini API Keyを追加
-echo "GEMINI_API_KEY=your_api_key_here" >> .env
-# API Keyの取得: https://aistudio.google.com/app/apikey
-```
-
-**使用例:**
-
-```bash
-# 基本的な使用（HTMLレポート生成）
-npm run dev -- analyze-dropout \
-  --podcast-id YOUR_ID \
-  --episode-id EPISODE_ID \
-  --audio ./audio/episode.mp3
-
-# ダークテーマで生成
-npm run dev -- analyze-dropout \
-  --podcast-id YOUR_ID \
-  --episode-id EPISODE_ID \
-  --audio ./audio/episode.mp3 \
-  --theme dark
-
-# 出力先ディレクトリを指定
-npm run dev -- analyze-dropout \
-  --podcast-id YOUR_ID \
-  --episode-id EPISODE_ID \
-  --audio ./audio/episode.mp3 \
-  --output-dir ./reports
-
-# セグメント長を30秒に変更
-npm run dev -- analyze-dropout \
-  --podcast-id YOUR_ID \
-  --episode-id EPISODE_ID \
-  --audio ./audio/episode.mp3 \
-  --segment-duration 30
-
-# 英語の音声を分析
-npm run dev -- analyze-dropout \
-  --podcast-id YOUR_ID \
-  --episode-id EPISODE_ID \
-  --audio ./audio/episode.mp3 \
-  --language en
-
-# カスタムモデルを指定（より高精度）
-npm run dev -- analyze-dropout \
-  --podcast-id YOUR_ID \
-  --episode-id EPISODE_ID \
-  --audio ./audio/episode.mp3 \
-  --model-path ./whisper.cpp/models/ggml-large.bin
-```
-
-**オプション:**
-- `--podcast-id <id>` (必須): ポッドキャストID
-- `--episode-id <id>` (必須): エピソードID
-- `--audio <path>` (必須): 音声ファイルパス（mp3, wav, m4a等）
-- `--segment-duration <seconds>`: セグメント長（秒、デフォルト: `60`）
-- `--language <lang>`: 音声言語（デフォルト: `ja`）
-- `--model-path <path>`: Whisperモデルファイルのパス（デフォルト: `whisper.cpp/models/ggml-base.bin`）
-- `--output-dir <dir>`: 出力ディレクトリ（デフォルト: `./output`）
-- `--theme <theme>`: ビジュアライゼーションのテーマ（`light` または `dark`、デフォルト: `light`）
-
-**生成されるレポート内容:**
-- 🤖 **AI分析サマリー**: Gemini APIによる全体分析と具体的な改善提案
-- 📊 **Key Metrics**: 総リスナー数、平均離脱率、最大離脱セグメントなど
-- 🔥 **ヒートマップ**: セグメント別離脱率の視覚的表示
-- 📈 **グラフ**: 離脱率推移とリスナー数推移の折れ線グラフ
-- 📝 **詳細分析**: セグメントごとの詳細情報とトピック分類
-
-**モデルサイズの選択:**
-- `tiny`: 最速、低精度（75MB）
-- `base`: 推奨、バランス良好（142MB）
-- `small`: 高精度、やや遅い（466MB）
-- `medium`: より高精度（1.5GB）
-- `large`: 最高精度、最も遅い（2.9GB）
-
-**特徴:**
-- ✅ 完全無料（ローカル実行）
-- ✅ プライバシー保護（音声データが外部送信されない）
-- ✅ オフライン動作可能
-- ✅ インタラクティブなHTMLビジュアライゼーション
-  - 離脱率推移の折れ線グラフ
-  - リスナー数推移の折れ線グラフ
-  - セグメント別離脱率ヒートマップ
-  - 詳細なセグメント情報の表示
-  - プロフェッショナルなビジネスデザイン（Tailwind CSS）
-- ✅ 自動トピック分類
-  - 技術・開発、歴史・背景、機能・特徴、問題・課題など
-  - トピック別離脱率の統計情報
-  - カテゴリ別の分析レポート
-- ✅ AI分析サマリー（Gemini API）
-  - 全体的な傾向の自動分析
-  - 重要な発見の抽出
-  - 具体的な改善提案の生成
-  - 問題のあるセグメントの詳細分析と改善案
-
 ## ライブラリAPI
 
 ### 主なクラス
@@ -442,109 +329,6 @@ const analytics = new SpotifyAnalytics({
 - `exportToJSON(data, filePath)`: JSON出力
 - `exportAll(options)`: 一括エクスポート
 
-#### `LocalWhisperClient`
-
-ローカルで音声を文字起こしするためのクライアントです。
-
-```typescript
-import { LocalWhisperClient } from 'spotify-analytics';
-
-const whisper = new LocalWhisperClient({
-  language: 'ja',
-  modelPath: './whisper.cpp/models/ggml-base.bin'
-});
-
-// 音声ファイルを文字起こし
-const transcript = await whisper.transcribe('./audio/episode.mp3');
-
-// セグメント分割
-const segments = whisper.splitIntoSegments(transcript, 60);
-```
-
-#### `DropoutAnalyzer`
-
-リスナーの離脱分析を行うクラスです。
-
-```typescript
-import { DropoutAnalyzer } from 'spotify-analytics';
-
-const analyzer = new DropoutAnalyzer(spotifyAnalytics);
-
-const result = await analyzer.analyzeDropout({
-  podcastId: 'YOUR_ID',
-  episodeId: 'EPISODE_ID',
-  audioFilePath: './audio/episode.mp3',
-  segmentDuration: 60,
-  language: 'ja'
-});
-
-console.log(result.summary.averageDropoutRate);
-```
-
-#### `TopicModeler`
-
-トピック分類を行うクラスです。
-
-```typescript
-import { TopicModeler } from 'spotify-analytics';
-
-const modeler = new TopicModeler();
-
-// Dropout segmentsをカテゴリ分類
-const categorized = modeler.extractTopicsFromDropout(result.segments);
-
-// トピック別統計
-const distribution = modeler.getTopicDistribution(categorized);
-const dropoutByTopic = modeler.getDropoutByTopic(categorized);
-```
-
-#### `DropoutVisualizer`
-
-分析結果をHTMLで可視化するクラスです。
-
-```typescript
-import { DropoutVisualizer, AISummaryGenerator } from 'spotify-analytics';
-
-const visualizer = new DropoutVisualizer();
-
-// AI分析サマリーを生成（オプション）
-const summaryGenerator = new AISummaryGenerator();
-const aiSummary = await summaryGenerator.generateSummary(result);
-
-visualizer.generateHTML(result, {
-  outputPath: './output/analysis.html',
-  title: 'Dropout Analysis Report',
-  theme: 'dark',
-  aiSummary // AI分析結果を含める
-});
-```
-
-#### `AISummaryGenerator`
-
-Gemini APIを使用してAI分析サマリーを生成するクラスです。
-
-```typescript
-import { AISummaryGenerator } from 'spotify-analytics';
-
-const generator = new AISummaryGenerator(process.env.GEMINI_API_KEY);
-
-// 分析結果からAIサマリーを生成
-const summary = await generator.generateSummary(dropoutAnalysisResult);
-
-if (summary) {
-  console.log('Overview:', summary.overview);
-  console.log('Key Findings:', summary.keyFindings);
-  console.log('Recommendations:', summary.recommendations);
-  console.log('Critical Segments:', summary.criticalSegments);
-}
-```
-
-**生成される情報:**
-- `overview`: 全体的な傾向と状況の説明
-- `keyFindings`: 重要な発見のリスト
-- `recommendations`: 具体的な改善提案のリスト
-- `criticalSegments`: 問題のあるセグメントの詳細分析と改善案
-
 #### `SpotifyConnector` (低レベルAPI)
 
 直接APIを呼び出す場合に使用します。通常は`SpotifyAnalytics`の使用を推奨します。
@@ -568,12 +352,7 @@ spotify-analytics/
 ├── src/
 │   ├── lib/                       # ライブラリコア
 │   │   ├── SpotifyAnalytics.ts    # 高レベルAPI
-│   │   ├── SpotifyConnector.ts    # 低レベルAPI
-│   │   ├── LocalWhisperClient.ts  # Whisper.cpp連携
-│   │   ├── DropoutAnalyzer.ts     # 離脱分析
-│   │   ├── DropoutVisualizer.ts   # HTMLビジュアライゼーション
-│   │   ├── TopicModeler.ts        # トピック自動分類
-│   │   └── AISummaryGenerator.ts  # AI分析サマリー生成
+│   │   └── SpotifyConnector.ts    # 低レベルAPI
 │   ├── cli/                       # CLIツール
 │   │   ├── index.ts               # CLIエントリーポイント
 │   │   ├── commands/              # CLIコマンド
@@ -581,9 +360,6 @@ spotify-analytics/
 │   ├── exporters/                 # CSV/JSONエクスポーター
 │   ├── types/                     # TypeScript型定義
 │   └── utils/                     # 共通ユーティリティ
-├── whisper.cpp/                   # Whisper.cppサブモジュール
-├── scripts/                       # セットアップスクリプト
-│   └── setup-whisper.sh          # Whisper.cppセットアップ
 ├── .env                           # 環境変数（gitignoreに含む）
 ├── .env.example                   # 環境変数のサンプル
 ├── internal-docs/                 # ドキュメント

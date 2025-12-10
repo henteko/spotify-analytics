@@ -38,8 +38,6 @@
     "test": "jest",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
-    "setup:whisper": "bash scripts/setup-whisper.sh",
-    "postinstall": "git submodule update --init --recursive || true",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -53,7 +51,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "async-mutex": "^0.5.0",
     "chalk": "^4.1.2",
     "cli-progress": "^3.12.0",
