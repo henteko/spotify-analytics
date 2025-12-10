@@ -59,6 +59,7 @@ export interface PerformanceData {
   averageListenPercentage: number;
   medianListenPercentage: number;
   completionRate: number;
+  samples?: number[];  // 時系列の継続率データ (0-100の範囲)
 }
 
 export interface ExportResult {

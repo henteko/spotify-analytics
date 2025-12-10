@@ -367,6 +367,7 @@ export class SpotifyAnalytics {
       averageListenPercentage,
       medianListenPercentage,
       completionRate,
+      samples: response.samples,  // 元のsamplesデータをそのまま返す
     };
   }
 
